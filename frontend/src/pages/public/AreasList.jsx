@@ -4,11 +4,13 @@ import { fetchAreas } from '../../features/parkingSlice';
 import { Link } from 'react-router-dom';
 import { FiMapPin, FiClock, FiDollarSign, FiSearch, FiSliders, FiCpu, FiGrid } from 'react-icons/fi';
 import { motion } from 'framer-motion';
+import api from '../../utils/api';
 
 const AreasList = () => {
   const [search, setSearch] = useState('');
   const [city, setCity] = useState('');
   const [vehicleType, setVehicleType] = useState('');
+  const [cities, setCities] = useState([]);
 
   const dispatch = useDispatch();
   const { areas, loading } = useSelector((state) => state.parking);
@@ -17,6 +19,20 @@ const AreasList = () => {
   useEffect(() => {
     dispatch(fetchAreas({ search, city, vehicleType }));
   }, [dispatch, search, city, vehicleType]);
+
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const res = await api.get('/areas/cities');
+        if (res.data.success) {
+          setCities(res.data.cities);
+        }
+      } catch (err) {
+        console.error('Error retrieving cities list:', err);
+      }
+    };
+    fetchCities();
+  }, []);
 
   const handleClearFilters = () => {
     setSearch('');
@@ -85,10 +101,11 @@ const AreasList = () => {
             className="w-full pl-11 pr-4 py-2.5 bg-slate-100/30 dark:bg-zinc-950/20 border border-slate-200/60 dark:border-zinc-900 rounded-xl text-xs outline-none text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none font-bold"
           >
             <option value="">All Cities</option>
-            <option value="Kochi">Kochi</option>
-            <option value="Bangalore">Bangalore</option>
-            <option value="Mumbai">Mumbai</option>
-            <option value="Chennai">Chennai</option>
+            {cities.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
           </select>
         </div>
 

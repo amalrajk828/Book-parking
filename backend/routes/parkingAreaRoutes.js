@@ -5,7 +5,8 @@ import {
   getParkingAreaById,
   updateParkingArea,
   deleteParkingArea,
-  assignGuide
+  assignGuide,
+  getUniqueCities
 } from '../controllers/parkingAreaController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorize } from '../middleware/roleMiddleware.js';
@@ -14,6 +15,7 @@ const router = express.Router();
 
 // Public routes
 router.get('/', getParkingAreas);
+router.get('/cities', getUniqueCities);
 router.get('/:id', getParkingAreaById);
 
 // Admin-only protected routes

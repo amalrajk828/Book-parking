@@ -21,6 +21,13 @@ const parkingAreaSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please provide a city'],
     trim: true,
+    set: function(val) {
+      if (!val) return val;
+      return val
+        .trim()
+        .toLowerCase()
+        .replace(/\b\w/g, c => c.toUpperCase());
+    }
   },
   vehicleTypes: {
     type: [String],
