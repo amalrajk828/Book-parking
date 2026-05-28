@@ -1,0 +1,536 @@
+Build a complete production-ready full-stack Smart Parking Booking Web Application using the MERN Stack (MongoDB, Express.js, React.js, Node.js).
+
+The website must have a modern premium UI, responsive design, secure authentication system, real-time parking management features, QR-based booking verification, payment integration, and role-based dashboards.
+
+The project architecture must follow industry standards with clean folder structure, reusable components, protected routes, REST APIs, JWT authentication, middleware, MVC architecture, error handling, validation, and scalable database design.
+
+---
+
+# Core Technologies
+
+Frontend:
+
+* React.js
+* Vite
+* Tailwind CSS
+* Redux Toolkit
+* React Router DOM
+* Axios
+* React Icons
+* Framer Motion
+* Chart.js or Recharts
+
+Backend:
+
+* Node.js
+* Express.js
+* MongoDB
+* Mongoose
+* JWT Authentication
+* bcrypt
+* Multer
+* QR Code Generator
+* Socket.io (optional real-time updates)
+
+Database:
+
+* MongoDB Atlas
+
+Payment:
+
+* Razorpay or Stripe integration
+
+Deployment:
+
+* Frontend: Vercel / Netlify
+* Backend: Render / Railway
+* Database: MongoDB Atlas
+
+---
+
+# User Roles
+
+The application must contain 3 main roles:
+
+1. Admin
+2. Parking Guide
+3. User
+
+---
+
+# Authentication System
+
+Implement secure authentication with:
+
+* Register
+* Login
+* Logout
+* Forgot Password
+* Reset Password
+* JWT Authentication
+* Protected Routes
+* Role-Based Authorization
+* Password Hashing
+* Email Verification
+* Session Persistence
+
+Registration fields:
+
+* Username
+* Email
+* Phone Number
+* Password
+* Confirm Password
+
+---
+
+# ADMIN FEATURES
+
+Admin dashboard must be professional and analytics-based.
+
+Admin can:
+
+## Parking Area Management
+
+* Add parking areas
+* Edit parking areas
+* Delete parking areas
+* Upload parking area images
+* Add location with Google Maps integration
+* Set parking rates per hour
+* Set total parking slots
+* Assign parking guides to parking areas
+
+Each parking area must contain:
+
+* Parking Area Name
+* Unique Parking Area ID
+* Address
+* City
+* Vehicle Types Supported
+* Opening & Closing Time
+* Parking Fee Per Hour
+* Total Slots
+* Available Slots
+* Occupied Slots
+* Parking Guide Assigned
+
+---
+
+## Parking Slot Management
+
+Each parking slot must:
+
+* Have unique slot ID
+* Belong to one parking area
+* Have status:
+
+  * Available
+  * Reserved
+  * Occupied
+  * Expired
+* Store vehicle details
+* Store booking details
+* Store timing information
+
+Admin can:
+
+* Create slots automatically
+* Edit slots
+* Remove slots
+* Monitor live slot usage
+
+Example:
+Area ID: PK-KOCHI-01
+Slots:
+
+* PK-KOCHI-01-A1
+* PK-KOCHI-01-A2
+* PK-KOCHI-01-A3
+
+---
+
+## User Management
+
+Admin can:
+
+* View all users
+* Block/unblock users
+* View booking history
+* View payment history
+
+---
+
+## Parking Guide Management
+
+Admin can:
+
+* Add parking guides
+* Assign parking guides to areas
+* Track guide activities
+* View check-in/check-out logs
+
+---
+
+## Analytics Dashboard
+
+Dashboard must include:
+
+* Total Users
+* Total Bookings
+* Active Parking Areas
+* Revenue Analytics
+* Daily Revenue
+* Monthly Revenue
+* Slot Usage Statistics
+* Occupancy Charts
+* Peak Hour Analysis
+
+---
+
+# PARKING GUIDE FEATURES
+
+Parking Guide dashboard must allow:
+
+## Slot Monitoring
+
+Guide can:
+
+* View all slots in assigned parking area
+* View available slots
+* View occupied slots
+* View reserved slots
+* View expired bookings
+
+---
+
+## Booking Verification
+
+When user books a slot:
+
+* Generate QR Code
+* Guide scans QR code
+* Guide sees booking details
+
+QR Details:
+
+* User Name
+* Vehicle Number
+* Slot ID
+* Parking Area
+* Booking Time
+* Reserved Hours
+* Estimated Amount
+* Booking Status
+
+---
+
+## Check-In System
+
+Guide can:
+
+* Confirm user arrival
+* Set actual check-in time
+* Mark slot as occupied
+
+Rules:
+
+* If user does not check in before reservation expiry time:
+
+  * Booking automatically expires
+  * Slot becomes available again
+
+---
+
+## Check-Out System
+
+Guide can:
+
+* Set check-out time
+* Calculate extra parking charges if delayed
+* Generate final bill
+* Free the slot after checkout
+
+Billing Logic:
+
+* Base price calculated from reserved hours
+* Additional hourly charge added for overtime
+
+Example:
+Reserved: 2 hours
+Stayed: 3.5 hours
+Extra amount automatically calculated
+
+---
+
+# USER FEATURES
+
+## User Dashboard
+
+User can:
+
+* Register/Login
+* View nearby parking areas
+* Search parking areas
+* Filter parking areas
+* View available slots
+* View pricing
+* View maps/location
+
+---
+
+## Slot Booking System
+
+Booking flow:
+
+1. Select parking area
+2. Select available slot
+3. Enter vehicle details
+4. Select number of hours
+5. Make payment
+6. Receive booking confirmation
+7. Receive QR Code
+
+Vehicle details:
+
+* Vehicle Type
+* Vehicle Number
+* Owner Name
+
+---
+
+## QR Code System
+
+After successful booking:
+
+* Generate downloadable QR Code
+* Show booking details
+* Send QR code via email
+
+QR should contain:
+
+* Booking ID
+* User ID
+* Slot ID
+* Area ID
+* Reserved Time
+* Payment Status
+
+---
+
+## Booking Rules
+
+If user:
+
+* Does not check in before expiry:
+
+  * Booking cancelled automatically
+  * Slot released
+
+If user:
+
+* Checks out late:
+
+  * Additional amount calculated automatically
+
+---
+
+## Booking History
+
+User can:
+
+* View booking history
+* View payment receipts
+* Download invoices
+* Cancel future bookings
+
+---
+
+# Additional Features
+
+Add all modern features expected in a production-level platform:
+
+## UI/UX
+
+* Premium modern responsive design
+* Dark/Light mode
+* Mobile responsive
+* Smooth animations
+* Skeleton loaders
+* Toast notifications
+
+---
+
+## Notifications
+
+* Email notifications
+* Booking confirmation emails
+* Booking expiry alerts
+* Payment success alerts
+
+---
+
+## Real-Time Features
+
+* Live slot availability updates
+* Real-time occupancy status
+* Live booking updates
+
+---
+
+## Security
+
+* Input validation
+* Rate limiting
+* Secure API handling
+* XSS protection
+* MongoDB sanitization
+* Helmet security
+
+---
+
+# Pages Required
+
+## Public Pages
+
+* Home Page
+* About Page
+* Contact Page
+* Parking Areas Listing
+* Parking Area Details
+* Login
+* Register
+* Forgot Password
+
+---
+
+## User Pages
+
+* Dashboard
+* My Bookings
+* Booking Details
+* Payment History
+* Profile Settings
+
+---
+
+## Parking Guide Pages
+
+* Guide Dashboard
+* QR Scanner Page
+* Slot Management
+* Check-In/Check-Out Panel
+
+---
+
+## Admin Pages
+
+* Admin Dashboard
+* Manage Parking Areas
+* Manage Slots
+* Manage Users
+* Manage Parking Guides
+* Analytics Page
+* Revenue Reports
+
+---
+
+# Backend Requirements
+
+Create:
+
+* RESTful APIs
+* Middleware
+* Controllers
+* Models
+* Services
+* Validation
+* Error handling
+* Authentication middleware
+* Role middleware
+
+Use proper MVC architecture.
+
+---
+
+# Database Collections
+
+Design scalable MongoDB schemas for:
+
+* Users
+* Parking Areas
+* Parking Slots
+* Bookings
+* Payments
+* Notifications
+* Parking Guides
+* Check-In Logs
+
+---
+
+# Extra Advanced Features
+
+Add advanced features if possible:
+
+* AI-based parking prediction
+* Heatmap analytics
+* Dynamic pricing during peak hours
+* Google Maps live navigation
+* Vehicle entry photo capture
+* Admin export reports (PDF/Excel)
+* Multi-city support
+* Multi-vehicle booking
+
+---
+
+# Expected Output
+
+Generate:
+
+1. Full frontend code
+2. Full backend code
+3. MongoDB models
+4. API routes
+5. Authentication system
+6. Dashboard UI
+7. QR booking system
+8. Payment integration
+9. Responsive design
+10. Deployment-ready project structure
+
+The code must be:
+
+* Clean
+* Professional
+* Scalable
+* Production-ready
+* Fully responsive
+* Well-commented
+* Beginner understandable
+* Modern UI focused
+
+Also generate:
+
+* Folder structure
+* Installation steps
+* Environment variables
+* API documentation
+* Deployment guide
+
+Design style should be similar to:
+
+* Tesla
+* Uber
+* Airbnb
+* Modern SaaS dashboard UI
+
+Color palette:
+
+* Black
+* White
+* Gray
+* Blue accents
+* Glassmorphism effects
+* Clean typography
+
+The application should feel like a real-world commercial smart parking management platform.

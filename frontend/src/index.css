@@ -1,0 +1,121 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply antialiased text-slate-800 bg-slate-50 transition-colors duration-300 font-sans selection:bg-blue-500/25;
+    background-image: radial-gradient(at 18% 99%, rgba(139, 92, 246, 0.04) 0px, transparent 50%),
+                      radial-gradient(at 97% 8%, rgba(59, 130, 246, 0.04) 0px, transparent 50%),
+                      radial-gradient(at 80% 50%, rgba(6, 182, 212, 0.03) 0px, transparent 50%);
+  }
+
+  body.dark {
+    @apply text-slate-200 bg-zinc-950 selection:bg-blue-500/30;
+    background-image: radial-gradient(at 18% 99%, rgba(139, 92, 246, 0.06) 0px, transparent 50%),
+                      radial-gradient(at 97% 8%, rgba(59, 130, 246, 0.06) 0px, transparent 50%),
+                      radial-gradient(at 80% 50%, rgba(6, 182, 212, 0.04) 0px, transparent 50%);
+  }
+}
+
+/* Custom Premium Utilities */
+@layer components {
+  /* Premium Glassmorphism Cards */
+  .glass-card {
+    @apply backdrop-blur-md bg-white/70 dark:bg-zinc-950/70 border border-slate-200/40 dark:border-zinc-900/50 shadow-glass-light dark:shadow-glass hover:border-slate-300/60 dark:hover:border-zinc-800/60 transition-all duration-300;
+  }
+
+  .premium-card {
+    @apply backdrop-blur-lg bg-white/80 dark:bg-zinc-950/80 border border-slate-200/50 dark:border-zinc-900/50 rounded-3xl shadow-sm hover:shadow-xl hover:translate-y-[-2px] hover:border-blue-500/30 dark:hover:border-blue-500/15 transition-all duration-300;
+  }
+
+  /* Sleek Glassmorphic inputs */
+  .glass-input {
+    @apply backdrop-blur-sm bg-white/40 dark:bg-zinc-950/30 border border-slate-200 dark:border-zinc-900 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-white font-medium;
+  }
+
+  /* Neon-accented button actions */
+  .btn-primary {
+    @apply relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-blue-500/10;
+  }
+
+  .btn-secondary {
+    @apply bg-slate-100 dark:bg-zinc-900 hover:bg-slate-200 dark:hover:bg-zinc-800 text-slate-700 dark:text-slate-200 font-semibold px-6 py-2.5 rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 border border-slate-200/30 dark:border-zinc-800/30;
+  }
+
+  .btn-outline {
+    @apply border border-slate-200 dark:border-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-900/50 text-slate-700 dark:text-slate-300 font-semibold px-6 py-2.5 rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2;
+  }
+
+  /* Gradient Text Helper */
+  .gradient-text {
+    @apply bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 bg-clip-text text-transparent;
+  }
+
+  /* Interactive Scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-200 dark:bg-zinc-800 rounded-full hover:bg-slate-300 dark:hover:bg-zinc-700;
+  }
+}
+
+/* Slot Occupancy Glow Effects */
+.neon-glow-green {
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+  @apply border-emerald-500 bg-emerald-500/[0.03] text-emerald-600 dark:text-emerald-400;
+}
+.neon-glow-green:hover {
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.25);
+  @apply bg-emerald-500/[0.08];
+}
+
+.neon-glow-red {
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
+  @apply border-red-500 bg-red-500/[0.03] text-red-600 dark:text-red-400;
+}
+.neon-glow-red:hover {
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.25);
+  @apply bg-red-500/[0.08];
+}
+
+.neon-glow-amber {
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.15);
+  @apply border-amber-500 bg-amber-500/[0.03] text-amber-600 dark:text-amber-400;
+}
+.neon-glow-amber:hover {
+  box-shadow: 0 0 18px rgba(245, 158, 11, 0.25);
+  @apply bg-amber-500/[0.08];
+}
+
+.neon-glow-zinc {
+  box-shadow: 0 0 8px rgba(113, 113, 122, 0.08);
+  @apply border-zinc-700 bg-zinc-800/[0.02] text-zinc-500;
+}
+
+/* Premium Keyframe Animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; filter: drop-shadow(0 0 8px #3b82f6); }
+}
+
+.animate-glow {
+  animation: pulse-glow 3s infinite;
+}
