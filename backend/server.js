@@ -38,15 +38,51 @@ connectDB();
 
 const app = express();
 
-/* =========================
-   SECURITY MIDDLEWARE
-========================= */
-app.use(helmet());
+/* ==============================================
+   1. CORE SECURITY HEADERS
+============================================== */
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(mongoSanitize());
 
-/* =========================
-   RATE LIMIT & CORS CONFIGURATIONS
-========================= */
+/* ==============================================
+   2. CORS MIDDLEWARE (MUST BE FIRST IN PIPELINE)
+============================================== */
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow non-browser requests (like curl, postman, or mobile apps)
+    if (!origin) return callback(null, true);
+    
+    // Dynamic Origin Resolution:
+    // 1. Matches localhost and local IP loopbacks on any port
+    const isLocalhost = /^https?:\/\/localhost(:\d+)?$/.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin);
+    
+    // 2. Matches any Vercel deployments (covering all preview, branch, and production domains)
+    const isVercel = origin.endsWith('.vercel.app');
+    
+    // Localhost is strictly blocked in production mode
+    const isAllowed = isVercel || (process.env.NODE_ENV !== 'production' && isLocalhost);
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // Enables cookie, session header, and JWT token pass-through
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  optionsSuccessStatus: 200 // Asserts 200 OK for preflight handshakes to satisfy legacy client devices
+};
+
+// Apply CORS globally before any rate limiters or routers
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
+/* ==============================================
+   3. RATE LIMITING (AFTER CORS)
+============================================== */
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -67,41 +103,15 @@ app.use('/api/', limiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    
-    // Dynamic Origin Resolution:
-    // 1. Matches localhost and local IP loopbacks on any port
-    const isLocalhost = /^https?:\/\/localhost(:\d+)?$/.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin);
-    
-    // 2. Matches any Vercel deployments (covering all preview, branch, and production branches)
-    const isVercel = origin.endsWith('.vercel.app');
-    
-    if (isLocalhost || isVercel) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  optionsSuccessStatus: 200
-};
-
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
-
-/* =========================
-   BODY PARSER
-========================= */
+/* ==============================================
+   4. BODY PARSERS
+============================================== */
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-/* =========================
-   ROUTES
-========================= */
+/* ==============================================
+   5. ROUTE BINDINGS
+============================================== */
 app.use('/api/auth', authRoutes);
 app.use('/api/areas', parkingAreaRoutes);
 app.use('/api/bookings', bookingRoutes);
@@ -109,9 +119,9 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/slots', parkingSlotRoutes);
 
-/* =========================
-   ROOT
-========================= */
+/* ==============================================
+   6. ROOT API STATUS
+============================================== */
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
@@ -120,14 +130,14 @@ app.get('/', (req, res) => {
   });
 });
 
-/* =========================
-   ERROR HANDLER
-========================= */
+/* ==============================================
+   7. GLOBAL ERROR MIDDLEWARE
+============================================== */
 app.use(errorHandler);
 
-/* =========================
-   SERVER START
-========================= */
+/* ==============================================
+   8. SERVER LISTEN SETUP
+============================================== */
 const startServer = (port) => {
   const server = app.listen(port);
 
