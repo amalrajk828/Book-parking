@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchBookingById, userCancelBooking, clearActiveBooking } from '../../features/bookingSlice';
-import { FiArrowLeft, FiDownload, FiCheckCircle, FiInfo, FiSliders, FiAlertTriangle, FiClock } from 'react-icons/fi';
+import { FiArrowLeft, FiDownload, FiCheckCircle, FiInfo, FiAlertTriangle, FiClock } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import api from '../../utils/api';
 import { useToast } from '../../context/ToastContext';
 
 const BookingDetails = () => {
