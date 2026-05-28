@@ -8,7 +8,7 @@ import rateLimit from 'express-rate-limit';
 import connectDB from './config/db.js';
 import { errorHandler } from './middleware/errorMiddleware.js';
 
-// Route Imports
+// Routes
 import authRoutes from './routes/authRoutes.js';
 import parkingAreaRoutes from './routes/parkingAreaRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
@@ -18,14 +18,12 @@ import parkingSlotRoutes from './routes/parkingSlotRoutes.js';
 
 dotenv.config();
 
-// Security checks
-if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'super_secret_smart_parking_token_key_12345') {
-  if (process.env.NODE_ENV === 'production') {
-    console.error('FATAL ERROR: JWT_SECRET is missing or insecure');
-    process.exit(1);
-  } else {
-    console.warn('JWT_SECRET warning: using default or missing value');
-  }
+/* =========================
+   SECURITY CHECKS
+========================= */
+if (!process.env.JWT_SECRET) {
+  console.error('FATAL ERROR: JWT_SECRET missing');
+  process.exit(1);
 }
 
 if (!process.env.MONGO_URI) {
@@ -33,66 +31,75 @@ if (!process.env.MONGO_URI) {
   process.exit(1);
 }
 
-// Connect DB
+/* =========================
+   DB CONNECT
+========================= */
 connectDB();
 
 const app = express();
 
-/* ==============================================
-   1. CORE SECURITY HEADERS
-============================================== */
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
-}));
+/* =========================
+   SECURITY MIDDLEWARE
+========================= */
+app.use(helmet());
 app.use(mongoSanitize());
 
-/* ==============================================
-   2. CORS MIDDLEWARE (MUST BE FIRST IN PIPELINE)
-============================================== */
+/* =========================
+   CORS (FIXED - NO ORIGIN TRUE ISSUE)
+========================= */
 const corsOptions = {
-  origin: true, // Dynamically reflects request origin, allowing all hosts with credentials support
-  credentials: true, // Enables cookie, session header, and JWT token pass-through
+  origin: function (origin, callback) {
+    // Allow server-to-server or Postman
+    if (!origin) return callback(null, true);
+
+    // Allow localhost (dev only)
+    const isLocalhost = origin.includes('localhost');
+
+    // Allow all Vercel deployments
+    const isVercel = origin.endsWith('.vercel.app');
+
+    if (isLocalhost || isVercel) {
+      return callback(null, true);
+    }
+
+    return callback(null, false);
+  },
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  optionsSuccessStatus: 200 // Asserts 200 OK for preflight handshakes to satisfy legacy client devices
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 
-// Apply CORS globally before any rate limiters or routers
 app.use(cors(corsOptions));
+
+// IMPORTANT: preflight must be handled correctly
 app.options('*', cors(corsOptions));
 
-/* ==============================================
-   3. RATE LIMITING (AFTER CORS)
-============================================== */
+/* =========================
+   RATE LIMITING
+========================= */
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: 'Too many requests' }
+  max: 100
 });
 
 const authLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000, // 10 minutes
-  max: 5, // Limit each IP to 5 requests per windowMs
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: 'Too many authentication attempts, please try again after 10 minutes' }
+  windowMs: 10 * 60 * 1000,
+  max: 5
 });
 
 app.use('/api/', limiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
-/* ==============================================
-   4. BODY PARSERS
-============================================== */
+/* =========================
+   BODY PARSER
+========================= */
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
 
-/* ==============================================
-   5. ROUTE BINDINGS
-============================================== */
+/* =========================
+   ROUTES
+========================= */
 app.use('/api/auth', authRoutes);
 app.use('/api/areas', parkingAreaRoutes);
 app.use('/api/bookings', bookingRoutes);
@@ -100,53 +107,27 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/slots', parkingSlotRoutes);
 
-/* ==============================================
-   6. ROOT API STATUS
-============================================== */
+/* =========================
+   ROOT
+========================= */
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
-    service: 'Smart Parking API Server',
+    service: 'Smart Parking API',
     time: new Date()
   });
 });
 
-/* ==============================================
-   7. GLOBAL ERROR MIDDLEWARE
-============================================== */
+/* =========================
+   ERROR HANDLER
+========================= */
 app.use(errorHandler);
 
-/* ==============================================
-   8. SERVER LISTEN SETUP
-============================================== */
-const startServer = (port) => {
-  const server = app.listen(port);
-
-  server.on('listening', () => {
-    const address = server.address();
-    const bind = typeof address === 'string' ? address : `port ${address.port}`;
-
-    console.log(`Server running on ${bind}`);
-    console.log(`Mode: ${process.env.NODE_ENV || 'development'}`);
-  });
-
-  server.on('error', (error) => {
-    if (error.code === 'EADDRINUSE') {
-      console.error(`Port ${port} already in use`);
-      if (process.env.NODE_ENV !== 'production') {
-        startServer(Number(port) + 1);
-      } else {
-        process.exit(1);
-      }
-    } else {
-      throw error;
-    }
-  });
-
-  process.on('unhandledRejection', (err) => {
-    console.error('Unhandled Rejection:', err.message);
-  });
-};
-
+/* =========================
+   SERVER START
+========================= */
 const PORT = process.env.PORT || 5000;
-startServer(PORT);
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
