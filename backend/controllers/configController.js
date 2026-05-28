@@ -1,4 +1,6 @@
+console.log('[DEBUG] configController loading...');
 import WebsiteConfig from '../models/WebsiteConfig.js';
+console.log('[DEBUG] configController loaded successfully');
 
 // @desc    Get website configuration (Public)
 // @route   GET /api/config

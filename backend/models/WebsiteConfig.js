@@ -1,4 +1,6 @@
+console.log('[DEBUG] WebsiteConfig model file loading...');
 import mongoose from 'mongoose';
+console.log('[DEBUG] WebsiteConfig model file loaded successfully');
 
 const websiteConfigSchema = new mongoose.Schema({
   websiteName: {
