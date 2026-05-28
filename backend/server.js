@@ -67,33 +67,18 @@ app.use('/api/', limiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
-const whitelist = [];
-
-// Support local development origins
-if (process.env.CLIENT_DEV_URL) {
-  process.env.CLIENT_DEV_URL.split(',').forEach(o => whitelist.push(o.trim()));
-} else {
-  whitelist.push('http://localhost:5173');
-  whitelist.push('http://localhost:5174');
-}
-
-// Support production origins
-if (process.env.CLIENT_PROD_URL) {
-  process.env.CLIENT_PROD_URL.split(',').forEach(o => whitelist.push(o.trim()));
-}
-if (process.env.FRONTEND_URL) {
-  process.env.FRONTEND_URL.split(',').forEach(o => whitelist.push(o.trim()));
-}
-
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
     
-    const isWhitelisted = whitelist.includes(origin) || 
-                          origin.endsWith('.vercel.app') ||
-                          /https?:\/\/localhost:\d+/.test(origin);
-                          
-    if (isWhitelisted) {
+    // Dynamic Origin Resolution:
+    // 1. Matches localhost and local IP loopbacks on any port
+    const isLocalhost = /^https?:\/\/localhost(:\d+)?$/.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin);
+    
+    // 2. Matches any Vercel deployments (covering all preview, branch, and production branches)
+    const isVercel = origin.endsWith('.vercel.app');
+    
+    if (isLocalhost || isVercel) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
