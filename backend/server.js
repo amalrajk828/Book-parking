@@ -16,88 +16,68 @@ import adminRoutes from './routes/adminRoutes.js';
 import reservationRoutes from './routes/reservationRoutes.js';
 import parkingSlotRoutes from './routes/parkingSlotRoutes.js';
 
-// Load Env variables
 dotenv.config();
 
-// Check critical environment variables for production readiness
+// Security checks
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'super_secret_smart_parking_token_key_12345') {
   if (process.env.NODE_ENV === 'production') {
-    console.error('FATAL ERROR: JWT_SECRET is missing or using insecure default key in production mode! Process exiting.');
+    console.error('FATAL ERROR: JWT_SECRET is missing or insecure');
     process.exit(1);
   } else {
-    console.warn('SECURITY WARNING: JWT_SECRET is unset or using a default insecure key. Please configure this before deployment!');
+    console.warn('JWT_SECRET warning: using default or missing value');
   }
 }
 
 if (!process.env.MONGO_URI) {
-  console.error('FATAL ERROR: MONGO_URI is missing from your environment config! Process exiting.');
+  console.error('FATAL ERROR: MONGO_URI missing');
   process.exit(1);
 }
 
-// Connect Database
+// Connect DB
 connectDB();
 
 const app = express();
 
-// Security Middlewares
+/* =========================
+   SECURITY MIDDLEWARE
+========================= */
 app.use(helmet());
 app.use(mongoSanitize());
 
-// Rate Limiting
+/* =========================
+   RATE LIMIT
+========================= */
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, message: 'Too many requests from this IP, please try again after 15 minutes' }
+  message: { success: false, message: 'Too many requests' }
 });
+
 app.use('/api/', limiter);
 
-// Standard Middlewares
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'http://localhost:5000',
-  'https://book-parking-1z1uu8bir-amalraj.vercel.app'
-];
-
-if (process.env.FRONTEND_URL) {
-  const origins = process.env.FRONTEND_URL.split(',').map((o) => o.trim());
-  origins.forEach((o) => {
-    if (o && !allowedOrigins.includes(o)) {
-      allowedOrigins.push(o);
-    }
-  });
-}
-
-const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, curl, or postman)
-    if (!origin) return callback(null, true);
-    
-    const isAllowed = allowedOrigins.includes(origin) ||
-      /^https:\/\/book-parking-[a-zA-Z0-9-]+-amalraj\.vercel\.app$/.test(origin) ||
-      /^https:\/\/book-parking-.*\.vercel\.app$/.test(origin);
-      
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      console.warn(`[CORS BLOCKED] Request from origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+/* =========================
+   CORS (FIXED - ALLOW ALL ORIGINS)
+========================= */
+app.use(cors({
+  origin: true, // 🔥 allows ALL origins (fix for your issue)
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
-};
+}));
 
-app.use(cors(corsOptions));
-// Handle preflight OPTIONS requests across all routes
-app.options('*', cors(corsOptions));
+app.options('*', cors());
+
+/* =========================
+   BODY PARSER
+========================= */
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Route Bindings
+/* =========================
+   ROUTES
+========================= */
 app.use('/api/auth', authRoutes);
 app.use('/api/areas', parkingAreaRoutes);
 app.use('/api/bookings', bookingRoutes);
@@ -105,7 +85,9 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/slots', parkingSlotRoutes);
 
-// Root Route
+/* =========================
+   ROOT
+========================= */
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
@@ -114,52 +96,42 @@ app.get('/', (req, res) => {
   });
 });
 
-// Centralized error handler
+/* =========================
+   ERROR HANDLER
+========================= */
 app.use(errorHandler);
 
-// Port configuration & graceful EADDRINUSE conflict handler
+/* =========================
+   SERVER START
+========================= */
 const startServer = (port) => {
   const server = app.listen(port);
 
   server.on('listening', () => {
     const address = server.address();
     const bind = typeof address === 'string' ? address : `port ${address.port}`;
-    console.log(`\n==================================================`);
-    console.log(`[SERVER START SUCCESS]`);
-    console.log(`Smart Parking API Server is online and listening on ${bind}`);
-    console.log(`Environment Mode: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`Local Time: ${new Date().toLocaleString()}`);
-    console.log(`==================================================\n`);
+
+    console.log(`Server running on ${bind}`);
+    console.log(`Mode: ${process.env.NODE_ENV || 'development'}`);
   });
 
   server.on('error', (error) => {
-    if (error.syscall !== 'listen') {
+    if (error.code === 'EADDRINUSE') {
+      console.error(`Port ${port} already in use`);
+      if (process.env.NODE_ENV !== 'production') {
+        startServer(Number(port) + 1);
+      } else {
+        process.exit(1);
+      }
+    } else {
       throw error;
-    }
-
-    switch (error.code) {
-      case 'EADDRINUSE':
-        console.error(`[PORT CONFLICT] Port ${port} is already in use by another process.`);
-        if (process.env.NODE_ENV !== 'production') {
-          const fallbackPort = Number(port) + 1;
-          console.warn(`[PORT RESOLUTION] Dev Mode: Attempting to launch on fallback port ${fallbackPort} instead...`);
-          startServer(fallbackPort);
-        } else {
-          console.error('FATAL PORT ERROR: Chosen port is occupied in production mode. Process exiting.');
-          process.exit(1);
-        }
-        break;
-      default:
-        throw error;
     }
   });
 
-  // Handle unhandled promise rejections
-  process.on('unhandledRejection', (err, promise) => {
-    console.error(`[UNHANDLED REJECTION] Critical Error: ${err.message}`);
-    // Safe shutdown loop: server.close(() => process.exit(1));
+  process.on('unhandledRejection', (err) => {
+    console.error('Unhandled Rejection:', err.message);
   });
 };
 
-const initialPort = process.env.PORT || 5000;
-startServer(initialPort);
+const PORT = process.env.PORT || 5000;
+startServer(PORT);
