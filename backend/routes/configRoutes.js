@@ -6,9 +6,9 @@ import { authorize } from '../middleware/roleMiddleware.js';
 const router = express.Router();
 
 // GET /api/config (Public)
-router.get('/config', getConfig);
+router.get('/', getConfig);
 
 // PUT /api/config (Admin Only)
-router.put('/config', protect, authorize('admin'), updateConfig);
+router.put('/', protect, authorize('admin'), updateConfig);
 
 export default router;

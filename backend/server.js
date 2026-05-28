@@ -47,11 +47,10 @@ const corsOptions = {
     // Allow server-to-server, Postman, or local non-browser requests
     if (!origin) return callback(null, true);
 
-    // Enforce environment validation: allow localhost/127.0.0.1 loopbacks ONLY in non-production mode
     const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
-    const isVercel = origin.endsWith('.vercel.app');
+    const isVercel = origin.endsWith('.vercel.app') || origin.includes('.vercel.app');
 
-    const isAllowed = isVercel || (process.env.NODE_ENV !== 'production' && isLocalhost);
+    const isAllowed = isLocalhost || isVercel;
 
     if (isAllowed) {
       return callback(null, true);
@@ -62,11 +61,12 @@ const corsOptions = {
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  optionsSuccessStatus: 200 // Asserts 200 OK status for legacy browser preflights
+  optionsSuccessStatus: 200
 };
 
 // Mount CORS middleware as the absolute first entry point in the pipeline
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle OPTIONS preflights globally
 
 /* =========================
    SECURITY MIDDLEWARE
@@ -103,7 +103,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/areas', parkingAreaRoutes);
 app.use('/api/bookings', bookingRoutes);
-app.use('/api', configRoutes); // Mounted before /api/admin to resolve path matching precedence
+app.use('/api/config', configRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/slots', parkingSlotRoutes);

@@ -84,6 +84,7 @@ const Register = () => {
                 required
                 className="w-full pl-11 glass-input"
                 placeholder="John Doe"
+                autocomplete="name"
               />
             </div>
           </div>
@@ -100,6 +101,7 @@ const Register = () => {
                 required
                 className="w-full pl-11 glass-input"
                 placeholder="you@example.com"
+                autocomplete="email"
               />
             </div>
           </div>
@@ -116,6 +118,7 @@ const Register = () => {
                 required
                 className="w-full pl-11 glass-input"
                 placeholder="9876543210"
+                autocomplete="tel"
               />
             </div>
           </div>
@@ -132,6 +135,7 @@ const Register = () => {
                 required
                 className="w-full pl-11 glass-input"
                 placeholder="••••••••"
+                autocomplete="new-password"
               />
             </div>
           </div>
@@ -148,6 +152,7 @@ const Register = () => {
                 required
                 className="w-full pl-11 glass-input"
                 placeholder="••••••••"
+                autocomplete="new-password"
               />
             </div>
           </div>

@@ -57,6 +57,7 @@ const ForgotPassword = () => {
                     required
                     className="w-full pl-10 glass-input"
                     placeholder="you@example.com"
+                    autocomplete="email"
                   />
                 </div>
               </div>

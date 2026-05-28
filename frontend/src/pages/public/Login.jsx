@@ -77,6 +77,7 @@ const Login = () => {
                 required
                 className="w-full pl-11 glass-input"
                 placeholder="you@example.com"
+                autocomplete="email"
               />
             </div>
           </div>
@@ -95,6 +96,7 @@ const Login = () => {
                 required
                 className="w-full pl-11 glass-input"
                 placeholder="••••••••"
+                autocomplete="current-password"
               />
             </div>
           </div>
