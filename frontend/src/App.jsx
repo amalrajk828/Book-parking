@@ -50,7 +50,7 @@ const AppContent = () => {
   };
 
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="min-h-screen flex flex-col transition-colors duration-300 dark:bg-zinc-950">
         <Navbar toggleSidebar={toggleSidebar} />
         
