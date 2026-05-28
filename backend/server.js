@@ -39,6 +39,13 @@ connectDB();
 
 const app = express();
 
+app.get('/api/render-check', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Latest Render deployment active'
+  });
+});
+
 /* =========================
    CORS MIDDLEWARE (MUST BE FIRST)
 ========================= */

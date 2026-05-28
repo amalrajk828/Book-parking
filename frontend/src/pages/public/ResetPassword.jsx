@@ -102,7 +102,7 @@ const ResetPassword = () => {
                     required
                     className="w-full pl-11 glass-input"
                     placeholder="••••••••"
-                    autocomplete="new-password"
+                    autoComplete="new-password"
                   />
                 </div>
               </div>
@@ -118,7 +118,7 @@ const ResetPassword = () => {
                     required
                     className="w-full pl-11 glass-input"
                     placeholder="••••••••"
-                    autocomplete="new-password"
+                    autoComplete="new-password"
                   />
                 </div>
               </div>
