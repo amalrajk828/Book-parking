@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiCheckCircle, FiAlertCircle, FiAlertTriangle, FiInfo, FiX } from 'react-icons/fi';
 
@@ -7,6 +8,10 @@ const ToastContext = createContext();
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
+  const removeToast = useCallback((id) => {
+    setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
+  }, []);
+
   const addToast = useCallback((message, type = 'info', duration = 4000) => {
     const id = Math.random().toString(36).substring(2, 9);
     setToasts((prevToasts) => [...prevToasts, { id, message, type, duration }]);
@@ -14,11 +19,7 @@ export const ToastProvider = ({ children }) => {
     setTimeout(() => {
       removeToast(id);
     }, duration);
-  }, []);
-
-  const removeToast = useCallback((id) => {
-    setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
-  }, []);
+  }, [removeToast]);
 
   const getToastStyles = (type) => {
     switch (type) {

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { resetPasswordUser } from '../../features/authSlice';
-import { FiLock, FiArrowLeft, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
+import { FiLock, FiArrowLeft, FiCheckCircle } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { useToast } from '../../context/ToastContext';
 
@@ -46,7 +46,8 @@ const ResetPassword = () => {
       } else {
         addToast(result.payload || 'Failed to reset password. Token may be invalid or expired.', 'error');
       }
-    } catch (err) {
+    } catch (error) {
+      console.error('Password reset action failed:', error);
       addToast('An unexpected error occurred. Please try again.', 'error');
     }
     setLoading(false);

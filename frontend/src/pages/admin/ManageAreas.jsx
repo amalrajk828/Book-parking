@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAreas, createArea, deleteArea, assignAreaGuide } from '../../features/parkingSlice';
-import { FiMap, FiPlus, FiTrash, FiUserPlus, FiLayers, FiInfo } from 'react-icons/fi';
+import { FiPlus, FiTrash } from 'react-icons/fi';
 import api from '../../utils/api';
 import { useToast } from '../../context/ToastContext';
 
@@ -32,7 +32,9 @@ const ManageAreas = () => {
         if (res.data.success) {
           setGuides(res.data.guides);
         }
-      } catch (err) {}
+      } catch (err) {
+        console.error('Error fetching guides list:', err);
+      }
     };
     fetchGuidesList();
   }, [dispatch]);

@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+/* eslint-disable react-hooks/set-state-in-effect */
+import { useEffect, useState, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { FiActivity, FiMapPin, FiCpu, FiGrid, FiUserCheck, FiChevronRight, FiUser, FiMail, FiPhone, FiCreditCard, FiClock, FiX, FiCheckCircle, FiInfo, FiAlertTriangle } from 'react-icons/fi';
+import { FiMapPin, FiGrid, FiUserCheck, FiUser, FiMail, FiPhone, FiClock, FiX, FiCheckCircle, FiInfo, FiAlertTriangle } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../utils/api';
 import { useToast } from '../../context/ToastContext';
 
 const GuideDashboard = () => {
-  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { addToast } = useToast();
   
@@ -26,7 +26,7 @@ const GuideDashboard = () => {
   const [updatingSlotStatus, setUpdatingSlotStatus] = useState(false);
   const [checkoutSummary, setCheckoutSummary] = useState(null);
 
-  const getGuideArea = async () => {
+  const getGuideArea = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get('/areas');
@@ -46,11 +46,11 @@ const GuideDashboard = () => {
       console.error('[FRONTEND DEBUG] Error loading guide area details:', err);
     }
     setLoading(false);
-  };
+  }, [user]);
 
   useEffect(() => {
     getGuideArea();
-  }, [dispatch, user]);
+  }, [getGuideArea]);
 
   const handleSlotClick = async (slot) => {
     setSelectedSlot(slot);

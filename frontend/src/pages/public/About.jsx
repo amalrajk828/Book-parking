@@ -1,4 +1,3 @@
-import React from 'react';
 import { FiCpu, FiTrendingUp, FiShield, FiUsers } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 

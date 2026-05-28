@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  FiBookOpen, FiSearch, FiSliders, FiClock, FiDollarSign, 
-  FiMapPin, FiGrid, FiUser, FiInfo, FiEdit2, FiRotateCcw, FiCheck, FiX, FiAlertTriangle 
-} from 'react-icons/fi';
+/* eslint-disable react-hooks/set-state-in-effect */
+import { useEffect, useState } from 'react';
+import { FiSearch, FiEdit2, FiRotateCcw, FiX, FiAlertTriangle } from 'react-icons/fi';
 import api from '../../utils/api';
 import { useToast } from '../../context/ToastContext';
 

@@ -1,9 +1,8 @@
-import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../features/authSlice';
 import { useTheme } from '../../context/ThemeContext';
-import { FiSun, FiMoon, FiLogOut, FiMenu, FiUser, FiMapPin, FiCompass } from 'react-icons/fi';
+import { FiSun, FiMoon, FiLogOut, FiMenu, FiCompass } from 'react-icons/fi';
 
 const Navbar = ({ toggleSidebar }) => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);

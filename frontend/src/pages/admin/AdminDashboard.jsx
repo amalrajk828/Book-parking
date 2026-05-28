@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell, Legend, LineChart, Line 
 } from 'recharts';
-import { FiDollarSign, FiUsers, FiBookOpen, FiMapPin, FiCpu, FiTrendingUp, FiShield } from 'react-icons/fi';
+import { FiDollarSign, FiUsers, FiBookOpen, FiMapPin, FiCpu, FiTrendingUp } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import api from '../../utils/api';
 

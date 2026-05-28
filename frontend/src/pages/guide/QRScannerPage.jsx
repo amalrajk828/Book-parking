@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { verifyTicketQR, guideConfirmCheckIn, guideConfirmCheckOut, clearScannedBooking } from '../../features/bookingSlice';
-import { FiGrid, FiSearch, FiCheckCircle, FiClock, FiUser, FiInfo, FiDollarSign, FiAlertTriangle } from 'react-icons/fi';
+import { FiGrid, FiSearch, FiClock, FiUser, FiDollarSign, FiAlertTriangle } from 'react-icons/fi';
 import { useToast } from '../../context/ToastContext';
 
 const QRScannerPage = () => {
@@ -11,16 +11,7 @@ const QRScannerPage = () => {
 
   const dispatch = useDispatch();
   const { addToast } = useToast();
-  const { scannedBooking, loading, error } = useSelector((state) => state.bookings);
-
-  useEffect(() => {
-    if (scannedBooking) {
-      setSearchError('');
-    }
-    if (error) {
-      setSearchError(error);
-    }
-  }, [scannedBooking, error]);
+  const { scannedBooking, loading } = useSelector((state) => state.bookings);
 
   useEffect(() => {
     return () => {

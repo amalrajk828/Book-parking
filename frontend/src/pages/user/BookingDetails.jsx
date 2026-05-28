@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchBookingById, userCancelBooking, clearActiveBooking } from '../../features/bookingSlice';
 import { FiArrowLeft, FiDownload, FiCheckCircle, FiInfo, FiSliders, FiAlertTriangle, FiClock } from 'react-icons/fi';
@@ -10,7 +10,6 @@ import { useToast } from '../../context/ToastContext';
 const BookingDetails = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const { activeBooking, loading, error } = useSelector((state) => state.bookings);
   const { user } = useSelector((state) => state.auth);
   const { addToast } = useToast();

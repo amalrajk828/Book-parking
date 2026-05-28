@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { FiSend, FiMail, FiPhoneCall, FiMapPin, FiClock } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { useToast } from '../../context/ToastContext';

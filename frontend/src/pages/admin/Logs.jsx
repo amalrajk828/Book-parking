@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { FiClipboard, FiClock, FiUser, FiInfo, FiActivity, FiShield, FiCornerRightDown } from 'react-icons/fi';
+/* eslint-disable react-hooks/set-state-in-effect */
+import { useEffect, useState } from 'react';
+import { FiClock, FiActivity, FiShield } from 'react-icons/fi';
 import api from '../../utils/api';
 
 const Logs = () => {

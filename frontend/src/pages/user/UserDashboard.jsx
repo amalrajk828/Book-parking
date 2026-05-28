@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMyBookings } from '../../features/bookingSlice';
 import { Link } from 'react-router-dom';
-import { FiBookOpen, FiCompass, FiBell, FiUser, FiActivity, FiMapPin, FiClock, FiPlus } from 'react-icons/fi';
+import { FiBookOpen, FiCompass, FiBell, FiActivity, FiMapPin, FiClock } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import api from '../../utils/api';
 
@@ -18,12 +18,14 @@ const UserDashboard = () => {
     // Fetch notifications
     const getNotifications = async () => {
       try {
-        const res = await api.get('/auth/profile');
+        await api.get('/auth/profile');
         setNotifications([
           { _id: '1', message: 'Welcome to ParkSmart! Explore active slot grids now.', createdAt: new Date() },
           { _id: '2', message: 'First-time registry promo: Simulated payments enabled out-of-the-box.', createdAt: new Date() }
         ]);
-      } catch (err) {}
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      }
     };
     getNotifications();
   }, [dispatch]);

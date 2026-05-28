@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAreaDetails, clearSelectedArea } from '../../features/parkingSlice';
 import { createNewBooking } from '../../features/bookingSlice';
-import { FiMapPin, FiClock, FiDollarSign, FiCpu, FiUser, FiInfo, FiChevronRight, FiCreditCard, FiAlertTriangle } from 'react-icons/fi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { FiMapPin, FiUser, FiInfo, FiChevronRight, FiCreditCard } from 'react-icons/fi';
+import { motion } from 'framer-motion';
 import { useToast } from '../../context/ToastContext';
 
 const AreaDetails = () => {
@@ -12,7 +12,7 @@ const AreaDetails = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const { selectedArea, slots, loading, error } = useSelector((state) => state.parking);
+  const { selectedArea, slots, loading } = useSelector((state) => state.parking);
   const { isAuthenticated } = useSelector((state) => state.auth);
 
   const [selectedSlot, setSelectedSlot] = useState(null);

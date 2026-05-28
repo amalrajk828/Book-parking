@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAreas } from '../../features/parkingSlice';
 import { Link } from 'react-router-dom';
@@ -11,7 +11,7 @@ const AreasList = () => {
   const [vehicleType, setVehicleType] = useState('');
 
   const dispatch = useDispatch();
-  const { areas, loading, error } = useSelector((state) => state.parking);
+  const { areas, loading } = useSelector((state) => state.parking);
 
   useEffect(() => {
     dispatch(fetchAreas({ search, city, vehicleType }));

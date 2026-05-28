@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAreas, fetchAreaDetails, clearSelectedArea } from '../../features/parkingSlice';
-import { FiGrid, FiMapPin, FiInfo, FiSliders, FiCpu } from 'react-icons/fi';
 import api from '../../utils/api';
 import { useToast } from '../../context/ToastContext';
 

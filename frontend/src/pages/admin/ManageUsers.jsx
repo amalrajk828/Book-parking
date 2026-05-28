@@ -1,4 +1,6 @@
-import { FiUsers, FiLock, FiUnlock, FiSearch, FiEdit2, FiX } from 'react-icons/fi';
+/* eslint-disable react-hooks/set-state-in-effect */
+import { useState, useEffect } from 'react';
+import { FiLock, FiUnlock, FiSearch, FiEdit2, FiX } from 'react-icons/fi';
 import api from '../../utils/api';
 import { useToast } from '../../context/ToastContext';
 

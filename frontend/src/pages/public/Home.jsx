@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { FiMapPin, FiCpu, FiTrendingUp, FiShield, FiArrowRight, FiGithub, FiTwitter, FiMail, FiPhoneCall } from 'react-icons/fi';
 import { motion } from 'framer-motion';

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider, useSelector } from 'react-redux';
 import { store } from './store/store';
 import { ThemeProvider } from './context/ThemeContext';

@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMyBookings } from '../../features/bookingSlice';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiBookOpen, FiClock, FiDollarSign, FiSearch, FiInfo, FiAlertCircle } from 'react-icons/fi';
+import { FiBookOpen, FiSearch, FiAlertCircle } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import api from '../../utils/api';
 
