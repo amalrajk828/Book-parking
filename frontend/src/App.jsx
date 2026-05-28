@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Provider, useSelector } from 'react-redux';
+import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store/store';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
+import { fetchSettings } from './features/settingsSlice';
 
 // Common Components
 import Navbar from './components/common/Navbar';
@@ -21,6 +22,7 @@ import Contact from './pages/public/Contact';
 import AreasList from './pages/public/AreasList';
 import AreaDetails from './pages/public/AreaDetails';
 import NotFound from './pages/public/NotFound';
+import Maintenance from './pages/public/Maintenance';
 
 // User Pages
 import UserDashboard from './pages/user/UserDashboard';
@@ -40,14 +42,106 @@ import ManageUsers from './pages/admin/ManageUsers';
 import ManageGuides from './pages/admin/ManageGuides';
 import ManageBookings from './pages/admin/ManageBookings';
 import Logs from './pages/admin/Logs';
+import SettingsDashboard from './pages/admin/SettingsDashboard';
 
 const AppContent = () => {
-  const { isAuthenticated } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { settings, loading } = useSelector((state) => state.settings);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Fetch settings on application startup
+  useEffect(() => {
+    dispatch(fetchSettings());
+  }, [dispatch]);
+
+  // Inject Primary Color Theme Dynamically
+  useEffect(() => {
+    if (settings?.primaryColor) {
+      const rootColor = settings.primaryColor;
+      document.documentElement.style.setProperty('--primary-color', rootColor);
+      
+      let styleTag = document.getElementById('dynamic-theme-style');
+      if (!styleTag) {
+        styleTag = document.createElement('style');
+        styleTag.id = 'dynamic-theme-style';
+        document.head.appendChild(styleTag);
+      }
+      
+      styleTag.innerHTML = `
+        :root {
+          --color-primary: ${rootColor};
+        }
+        .bg-gradient-to-br.from-blue-500.to-indigo-600,
+        .bg-gradient-to-br.from-indigo-500.to-blue-500,
+        .bg-gradient-to-r.from-blue-600.to-indigo-600,
+        .bg-gradient-to-br.from-blue-500.to-indigo-500,
+        .bg-gradient-to-br.from-indigo-600.to-blue-500,
+        .bg-gradient-to-r.from-blue-500.to-indigo-600 {
+          background: linear-gradient(135deg, ${rootColor} 0%, ${rootColor}dd 100%) !important;
+        }
+        .btn-primary {
+          background: linear-gradient(135deg, ${rootColor} 0%, ${rootColor}dd 100%) !important;
+        }
+        .btn-primary:hover {
+          opacity: 0.95 !important;
+          box-shadow: 0 10px 15px -3px ${rootColor}33 !important;
+        }
+        .hover\\:from-blue-700:hover, .hover\\:to-indigo-700:hover {
+          background: ${rootColor}ee !important;
+        }
+        .text-blue-600,
+        .text-blue-500,
+        .text-blue-400 {
+          color: ${rootColor} !important;
+        }
+        .dark .text-blue-400 {
+          color: ${rootColor}ee !important;
+        }
+        .border-blue-500\\/10 {
+          border-color: ${rootColor}1a !important;
+        }
+        .bg-blue-600\\/10 {
+          background-color: ${rootColor}1a !important;
+        }
+        .hover\\:bg-blue-600\\/20:hover {
+          background-color: ${rootColor}33 !important;
+        }
+        .focus\\:border-blue-500:focus {
+          border-color: ${rootColor} !important;
+        }
+        .focus\\:ring-blue-500\\/20:focus {
+          box-shadow: 0 0 0 4px ${rootColor}33 !important;
+        }
+        .premium-card:hover {
+          border-color: ${rootColor}4d !important;
+        }
+        .dark .premium-card:hover {
+          border-color: ${rootColor}26 !important;
+        }
+      `;
+    }
+  }, [settings]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
+
+  // Maintenance Mode Gate Interceptor
+  const isMaintenanceActive = settings?.maintenanceMode && user?.role !== 'admin';
+
+  if (isMaintenanceActive) {
+    return (
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <div className="min-h-screen transition-colors duration-300 dark:bg-zinc-950">
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="*" element={<Maintenance />} />
+          </Routes>
+        </div>
+      </Router>
+    );
+  }
 
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -96,6 +190,7 @@ const AppContent = () => {
                 <Route path="/admin/guides" element={<ManageGuides />} />
                 <Route path="/admin/bookings" element={<ManageBookings />} />
                 <Route path="/admin/logs" element={<Logs />} />
+                <Route path="/admin/settings" element={<SettingsDashboard />} />
               </Route>
 
               {/* 404 Route */}

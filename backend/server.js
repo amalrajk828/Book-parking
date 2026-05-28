@@ -15,6 +15,7 @@ import bookingRoutes from './routes/bookingRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import reservationRoutes from './routes/reservationRoutes.js';
 import parkingSlotRoutes from './routes/parkingSlotRoutes.js';
+import settingsRoutes from './routes/settingsRoutes.js';
 
 dotenv.config();
 
@@ -105,6 +106,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/slots', parkingSlotRoutes);
+app.use('/api', settingsRoutes);
 
 /* =========================
    ROOT

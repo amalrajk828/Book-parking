@@ -12,6 +12,7 @@ const AreasList = () => {
 
   const dispatch = useDispatch();
   const { areas, loading } = useSelector((state) => state.parking);
+  const { settings } = useSelector((state) => state.settings);
 
   useEffect(() => {
     dispatch(fetchAreas({ search, city, vehicleType }));
@@ -171,7 +172,7 @@ const AreasList = () => {
                       </div>
                       <div className="flex items-center gap-1.5 font-extrabold text-blue-600 dark:text-blue-400">
                         <FiDollarSign />
-                        <span>₹{area.feePerHour}/hr</span>
+                        <span>{settings?.currency || '₹'}{area.feePerHour}/hr</span>
                       </div>
                     </div>
 

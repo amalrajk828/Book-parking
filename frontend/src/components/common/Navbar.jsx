@@ -6,6 +6,7 @@ import { FiSun, FiMoon, FiLogOut, FiMenu, FiCompass } from 'react-icons/fi';
 
 const Navbar = ({ toggleSidebar }) => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { settings } = useSelector((state) => state.settings);
   const { theme, toggleTheme } = useTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -37,11 +38,19 @@ const Navbar = ({ toggleSidebar }) => {
             )}
             
             <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-extrabold shadow-md shadow-blue-500/10 group-hover:scale-105 transition-all">
-                P
-              </div>
-              <span className="font-black text-lg tracking-wider bg-gradient-to-r from-blue-600 to-indigo-500 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent group-hover:opacity-90 transition-opacity">
-                PARKSMART
+              {settings.logoUrl ? (
+                <img 
+                  src={settings.logoUrl} 
+                  alt={settings.websiteName} 
+                  className="h-8 object-contain group-hover:scale-105 transition-all" 
+                />
+              ) : (
+                <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-extrabold shadow-md shadow-blue-500/10 group-hover:scale-105 transition-all">
+                  {(settings.websiteName || 'ParkSmart').substring(0, 1).toUpperCase()}
+                </div>
+              )}
+              <span className="font-black text-lg tracking-wider bg-gradient-to-r from-blue-600 to-indigo-500 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent group-hover:opacity-90 transition-opacity uppercase">
+                {settings.websiteName || 'PARKSMART'}
               </span>
             </Link>
           </div>

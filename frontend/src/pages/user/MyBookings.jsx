@@ -10,6 +10,7 @@ const MyBookings = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { myBookings, loading } = useSelector((state) => state.bookings);
+  const { settings } = useSelector((state) => state.settings);
   
   // Lookup state properties
   const [lookupId, setLookupId] = useState('');
@@ -187,7 +188,7 @@ const MyBookings = () => {
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <span className="text-slate-400 font-extrabold uppercase tracking-widest text-[9px]">Estimated Fee</span>
-                      <span className="font-extrabold text-blue-600 dark:text-blue-400">₹{b.estimatedAmount}</span>
+                      <span className="font-extrabold text-blue-600 dark:text-blue-400">{settings?.currency || '₹'}{b.estimatedAmount}</span>
                     </div>
                   </div>
                 </div>

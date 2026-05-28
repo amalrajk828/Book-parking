@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { 
   FiPieChart, FiMap, FiGrid, FiUsers, FiUserCheck, FiBookOpen, 
-  FiClipboard, FiUser, FiActivity, FiX, FiShield 
+  FiClipboard, FiUser, FiActivity, FiX, FiShield, FiSettings 
 } from 'react-icons/fi';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
@@ -18,6 +18,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     { to: '/admin/guides', label: 'Manage Guides', icon: <FiUserCheck size={18} /> },
     { to: '/admin/bookings', label: 'Manage Bookings', icon: <FiBookOpen size={18} /> },
     { to: '/admin/logs', label: 'Access Logs', icon: <FiClipboard size={18} /> },
+    { to: '/admin/settings', label: 'Site Settings', icon: <FiSettings size={18} /> },
   ];
 
   const guideLinks = [

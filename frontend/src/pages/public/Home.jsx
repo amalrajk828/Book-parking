@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { FiMapPin, FiCpu, FiTrendingUp, FiShield, FiArrowRight, FiGithub, FiTwitter, FiMail, FiPhoneCall } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 
 const Home = () => {
+  const { settings } = useSelector((state) => state.settings);
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -34,7 +37,7 @@ const Home = () => {
 
   return (
     <div className="relative min-h-[calc(100vh-4rem)] flex flex-col justify-between overflow-hidden">
-      
+
       {/* Background Neon Blobs */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-blue-500/10 dark:bg-blue-600/15 blur-3xl pointer-events-none animate-float" />
       <div className="absolute bottom-1/3 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 rounded-full bg-purple-500/10 dark:bg-purple-600/15 blur-3xl pointer-events-none animate-float" style={{ animationDelay: '2.5s' }} />
@@ -43,15 +46,15 @@ const Home = () => {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px] pointer-events-none opacity-80" />
 
       {/* Hero Section Container */}
-      <motion.main 
+      <motion.main
         variants={containerVariants}
         initial="hidden"
         animate="visible"
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24 flex-grow flex flex-col items-center justify-center text-center relative z-10"
       >
-        
+
         {/* Neon Indicator Badge */}
-        <motion.div 
+        <motion.div
           variants={itemVariants}
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card border-slate-200/50 dark:border-zinc-800/40 text-xs font-semibold text-blue-600 dark:text-blue-400 mb-8 shadow-sm hover:scale-[1.02] transition-transform duration-200"
         >
@@ -60,7 +63,7 @@ const Home = () => {
         </motion.div>
 
         {/* Dynamic Typography Title */}
-        <motion.h1 
+        <motion.h1
           variants={itemVariants}
           className="text-4xl sm:text-7xl font-black tracking-tight text-slate-900 dark:text-white max-w-4xl leading-tight font-sans"
         >
@@ -72,7 +75,7 @@ const Home = () => {
         </motion.h1>
 
         {/* Headline Description */}
-        <motion.p 
+        <motion.p
           variants={itemVariants}
           className="mt-6 text-base sm:text-lg text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed font-semibold font-sans"
         >
@@ -80,7 +83,7 @@ const Home = () => {
         </motion.p>
 
         {/* CTA Actions */}
-        <motion.div 
+        <motion.div
           variants={itemVariants}
           className="mt-10 flex flex-col sm:flex-row gap-4.5 justify-center items-center w-full max-w-md relative"
         >
@@ -94,7 +97,7 @@ const Home = () => {
         </motion.div>
 
         {/* Feature Cards Grid (Stagger fade in) */}
-        <motion.section 
+        <motion.section
           variants={containerVariants}
           className="mt-24 w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 font-semibold"
         >
@@ -124,8 +127,8 @@ const Home = () => {
               glowColor: 'hover:border-cyan-500/20 dark:hover:border-cyan-500/10'
             },
           ].map((feat, idx) => (
-            <motion.div 
-              key={idx} 
+            <motion.div
+              key={idx}
               variants={cardVariants}
               whileHover={{ y: -3, scale: 1.01 }}
               className={`premium-card p-7 flex flex-col items-center sm:items-start text-center sm:text-left gap-4 bg-white dark:bg-zinc-950/80 ${feat.glowColor}`}
@@ -148,10 +151,18 @@ const Home = () => {
             {/* Logo Column */}
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-extrabold">P</div>
-                <span className="font-black text-base uppercase tracking-wider dark:text-white">ParkSmart</span>
+                {settings.logoUrl ? (
+                  <img src={settings.logoUrl} alt={settings.websiteName} className="h-6 object-contain" />
+                ) : (
+                  <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-extrabold">
+                    {(settings.websiteName || 'ParkSmart').substring(0, 1).toUpperCase()}
+                  </div>
+                )}
+                <span className="font-black text-base uppercase tracking-wider dark:text-white">{settings.websiteName || 'ParkSmart'}</span>
               </div>
-              <p className="text-xs text-slate-400 leading-relaxed">Next-generation IoT smart parking reservation and gate checkout platform.</p>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                {settings.footerText || 'Next-generation IoT smart parking reservation and gate checkout platform.'}
+              </p>
             </div>
 
             {/* Support Links */}
@@ -165,14 +176,18 @@ const Home = () => {
             {/* Address Support */}
             <div className="flex flex-col gap-3.5 text-xs text-slate-500 dark:text-slate-400">
               <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest block mb-1">Contacts</span>
-              <div className="flex items-center gap-2">
-                <FiPhoneCall size={12} className="text-blue-500" />
-                <span>+91 9876543210</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FiMail size={12} className="text-blue-500" />
-                <span>support@parksmart.com</span>
-              </div>
+              {settings.supportPhone && (
+                <div className="flex items-center gap-2">
+                  <FiPhoneCall size={12} className="text-blue-500" />
+                  <span>{settings.supportPhone}</span>
+                </div>
+              )}
+              {settings.contactEmail && (
+                <div className="flex items-center gap-2">
+                  <FiMail size={12} className="text-blue-500" />
+                  <span>{settings.contactEmail}</span>
+                </div>
+              )}
             </div>
 
             {/* Social handles */}
@@ -187,7 +202,7 @@ const Home = () => {
 
           {/* Bottom Footer bar */}
           <div className="border-t border-slate-200/10 dark:border-zinc-800/30 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] text-slate-400">
-            <span>&copy; {new Date().getFullYear()} ParkSmart IoT Systems. All rights reserved.</span>
+            <span>&copy; {new Date().getFullYear()} {settings.websiteName || 'ParkSmart'} IoT Systems. All rights reserved.</span>
             <div className="flex gap-4">
               <a href="#" className="hover:text-blue-500">Privacy Policy</a>
               <a href="#" className="hover:text-blue-500">Terms of Use</a>
