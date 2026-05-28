@@ -32,47 +32,46 @@ if (!process.env.MONGO_URI) {
 }
 
 /* =========================
-   DB CONNECT
+   DB CONNECTION
 ========================= */
 connectDB();
 
 const app = express();
 
 /* =========================
+   CORS MIDDLEWARE (MUST BE FIRST)
+========================= */
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow server-to-server, Postman, or local non-browser requests
+    if (!origin) return callback(null, true);
+
+    // Enforce environment validation: allow localhost/127.0.0.1 loopbacks ONLY in non-production mode
+    const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
+    const isVercel = origin.endsWith('.vercel.app');
+
+    const isAllowed = isVercel || (process.env.NODE_ENV !== 'production' && isLocalhost);
+
+    if (isAllowed) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`Origin ${origin} not allowed by CORS`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  optionsSuccessStatus: 200 // Asserts 200 OK status for legacy browser preflights
+};
+
+// Mount CORS middleware as the absolute first entry point in the pipeline
+app.use(cors(corsOptions));
+
+/* =========================
    SECURITY MIDDLEWARE
 ========================= */
 app.use(helmet());
 app.use(mongoSanitize());
-
-/* =========================
-   CORS (FIXED - NO ORIGIN TRUE ISSUE)
-========================= */
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow server-to-server or Postman
-    if (!origin) return callback(null, true);
-
-    // Allow localhost (dev only)
-    const isLocalhost = origin.includes('localhost');
-
-    // Allow all Vercel deployments
-    const isVercel = origin.endsWith('.vercel.app');
-
-    if (isLocalhost || isVercel) {
-      return callback(null, true);
-    }
-
-    return callback(null, false);
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
-
-app.use(cors(corsOptions));
-
-// IMPORTANT: preflight must be handled correctly
-app.options('*', cors(corsOptions));
 
 /* =========================
    RATE LIMITING
@@ -92,7 +91,7 @@ app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
 /* =========================
-   BODY PARSER
+   BODY PARSERS
 ========================= */
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -124,7 +123,7 @@ app.get('/', (req, res) => {
 app.use(errorHandler);
 
 /* =========================
-   SERVER START
+   START SERVER
 ========================= */
 const PORT = process.env.PORT || 5000;
 
