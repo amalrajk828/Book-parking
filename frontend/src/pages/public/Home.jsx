@@ -88,6 +88,9 @@ const Home = () => {
             Book a Slot Now
             <FiArrowRight className="group-hover:translate-x-1.5 transition-transform" />
           </Link>
+          <Link to="/about" className="btn-secondary w-full sm:w-auto text-sm px-8 py-3.5 border border-slate-200/20 dark:border-zinc-800/30 uppercase font-extrabold tracking-wide">
+            Learn More
+          </Link>
         </motion.div>
 
         {/* Feature Cards Grid (Stagger fade in) */}

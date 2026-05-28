@@ -14,12 +14,7 @@ const BookingDetails = () => {
   const { user } = useSelector((state) => state.auth);
   const { addToast } = useToast();
   const [isCancelling, setIsCancelling] = useState(false);
-  
-  // Simulator states
-  const [showDeveloperPanel, setShowDeveloperPanel] = useState(false);
-  const [simShiftHours, setSimShiftHours] = useState(1.5);
-  const [simulating, setSimulating] = useState(false);
-  const [simMessage, setSimMessage] = useState('');
+
 
   useEffect(() => {
     dispatch(fetchBookingById(id));
@@ -48,56 +43,6 @@ const BookingDetails = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  // ==========================================
-  // SANDBOX SIMULATOR API WRAPPERS
-  // ==========================================
-  const triggerSimCheckIn = async () => {
-    setSimulating(true);
-    setSimMessage('');
-    try {
-      const res = await api.post(`/bookings/${id}/check-in`);
-      if (res.data.success) {
-        setSimMessage('SIMULATOR: Check-In approved. Gate entry completed.');
-        dispatch(fetchBookingById(id));
-      }
-    } catch (err) {
-      setSimMessage(`ERROR: ${err.response?.data?.message || 'Check-in failed'}`);
-    }
-    setSimulating(false);
-  };
-
-  const triggerSimLateCheckInShift = async () => {
-    setSimulating(true);
-    setSimMessage('');
-    try {
-      const res = await api.post(`/bookings/${id}/check-out`, { 
-        overrideDurationHours: activeBooking.reservedHours + Number(simShiftHours) 
-      });
-      if (res.data.success) {
-        setSimMessage(`SIMULATOR: Checkout approved with ${simShiftHours} overtime hours. Fee processed.`);
-        dispatch(fetchBookingById(id));
-      }
-    } catch (err) {
-      setSimMessage(`ERROR: ${err.response?.data?.message || 'Check-out failed'}`);
-    }
-    setSimulating(false);
-  };
-
-  const triggerSimStandardCheckOut = async () => {
-    setSimulating(true);
-    setSimMessage('');
-    try {
-      const res = await api.post(`/bookings/${id}/check-out`);
-      if (res.data.success) {
-        setSimMessage('SIMULATOR: Checkout approved. Slot released.');
-        dispatch(fetchBookingById(id));
-      }
-    } catch (err) {
-      setSimMessage(`ERROR: ${err.response?.data?.message || 'Check-out failed'}`);
-    }
-    setSimulating(false);
   };
 
   if (loading) {
@@ -418,70 +363,6 @@ const BookingDetails = () => {
                 </div>
               </div>
             </div>
-          </motion.div>
-
-          {/* Sandbox Developer Panel (Collapsible) */}
-          <motion.div variants={itemVariants} className="premium-card shadow-sm overflow-hidden border border-blue-500/15 dark:border-blue-500/10 bg-blue-600/[0.01]">
-            <button
-              onClick={() => setShowDeveloperPanel(!showDeveloperPanel)}
-              className="w-full p-4 flex items-center justify-between text-xs uppercase tracking-widest font-extrabold text-blue-600 dark:text-blue-400"
-            >
-              <span className="flex items-center gap-1.5"><FiSliders /> Developer Sandbox Panel</span>
-              <span>{showDeveloperPanel ? 'Collapse' : 'Expand'}</span>
-            </button>
-
-            {showDeveloperPanel && (
-              <div className="p-6 border-t border-slate-200/10 dark:border-zinc-900/35 flex flex-col gap-4 font-semibold">
-                <p className="text-[11px] text-slate-400 leading-relaxed font-bold">
-                  Sandbox toolpane to manually trigger gate check-in, check-out, and calculate overtime fees.
-                </p>
-
-                {simMessage && (
-                  <div className="p-3 bg-blue-600/10 border border-blue-500/20 rounded-xl text-blue-500 text-xs font-semibold flex items-start gap-2">
-                    <FiInfo className="shrink-0 mt-0.5" size={14} />
-                    <span>{simMessage}</span>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  <button
-                    onClick={triggerSimCheckIn}
-                    disabled={simulating || (activeBooking.status !== 'confirmed' && activeBooking.status !== 'pending')}
-                    className="btn-primary py-2 justify-center text-xs font-bold uppercase tracking-wider"
-                  >
-                    Simulate Gate Entry Check-In
-                  </button>
-                  <button
-                    onClick={triggerSimStandardCheckOut}
-                    disabled={simulating || activeBooking.status !== 'checked-in'}
-                    className="btn-secondary py-2 justify-center text-xs font-semibold uppercase tracking-wider"
-                  >
-                    Simulate Gate Exit Check-Out
-                  </button>
-                  <div className="p-3.5 bg-slate-100/30 dark:bg-zinc-900/20 border border-slate-200/20 dark:border-zinc-900/40 rounded-2xl flex flex-col gap-3 col-span-2 text-xs">
-                    <div className="flex justify-between items-center font-bold">
-                      <span className="dark:text-white uppercase tracking-wider text-[10px]">simulated overtime stay duration</span>
-                      <select
-                        value={simShiftHours}
-                        onChange={(e) => setSimShiftHours(Number(e.target.value))}
-                        className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-900 rounded px-1.5 py-0.5 outline-none font-bold text-blue-500"
-                      >
-                        <option value={1.5}>+1.5 Hours</option>
-                        <option value={3}>+3.0 Hours</option>
-                        <option value={5}>+5.0 Hours</option>
-                      </select>
-                    </div>
-                    <button
-                      onClick={triggerSimLateCheckInShift}
-                      disabled={simulating || activeBooking.status !== 'checked-in'}
-                      className="btn-primary bg-amber-500 hover:bg-amber-600 border-amber-500/20 py-2.5 justify-center font-extrabold uppercase tracking-wider text-xs"
-                    >
-                      Checkout with simulated Overtime stay
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </motion.div>
 
         </div>

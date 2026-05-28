@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser, clearError } from '../../features/authSlice';
 import { FiMail, FiLock, FiAlertCircle, FiArrowRight } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import { useToast } from '../../context/ToastContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -12,7 +11,7 @@ const Login = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { addToast } = useToast();
+  const [searchParams] = useSearchParams();
   const { loading, error, isAuthenticated, user } = useSelector((state) => state.auth);
 
   useEffect(() => {
@@ -21,27 +20,17 @@ const Login = () => {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      addToast(`Welcome back, ${user.username}!`, 'success');
       if (user.role === 'admin') navigate('/admin');
       else if (user.role === 'guide') navigate('/guide');
       else navigate('/dashboard');
     }
-  }, [isAuthenticated, user, navigate, addToast]);
-
-  useEffect(() => {
-    if (error) {
-      addToast(error, 'error');
-    }
-  }, [error, addToast]);
+  }, [isAuthenticated, user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      addToast('Please enter both email and password', 'warning');
-      return;
-    }
+    if (!email || !password) return;
 
-    await dispatch(loginUser({ email, password }));
+    dispatch(loginUser({ email, password }));
   };
 
   return (
@@ -66,6 +55,13 @@ const Login = () => {
           <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 rounded-2xl text-xs flex items-center gap-2">
             <FiAlertCircle size={16} />
             <span>{error}</span>
+          </div>
+        )}
+
+        {searchParams.get('expired') === 'true' && (
+          <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-500 rounded-2xl text-xs flex items-center gap-2">
+            <FiAlertCircle size={16} />
+            <span>Your session has expired. Please sign in again.</span>
           </div>
         )}
 

@@ -1,25 +1,7 @@
 import axios from 'axios';
 
-const getBaseURL = () => {
-  const envUrl = import.meta.env.VITE_API_URL;
-  if (!envUrl) {
-    return '/api';
-  }
-  // If the envUrl is a relative path (like '/api'), use it directly
-  if (envUrl.startsWith('/')) {
-    return envUrl;
-  }
-  // Trim trailing slash
-  const cleanedUrl = envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
-  // If it already ends with /api, use it; otherwise append it
-  if (cleanedUrl.endsWith('/api')) {
-    return cleanedUrl;
-  }
-  return `${cleanedUrl}/api`;
-};
-
 const api = axios.create({
-  baseURL: getBaseURL(),
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -35,6 +17,26 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Automatically handle JWT Token expiration & 401 Unauthorized states
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      console.warn('Session expired or unauthorized request. Purging auth tokens and performing auto-logout redirection.');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      
+      // Avoid redirecting repeatedly if already on the login page
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.href = '/login?expired=true';
+      }
+    }
     return Promise.reject(error);
   }
 );

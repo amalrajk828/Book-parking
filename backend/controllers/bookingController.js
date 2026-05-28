@@ -432,7 +432,6 @@ export const getBookingsByUser = async (req, res, next) => {
 export const getBookingBySlot = async (req, res, next) => {
   try {
     const slotId = req.params.slotId;
-    console.log(`[BACKEND DEBUG] Fetching active booking for slot ID: ${slotId}`);
 
     const slot = await ParkingSlot.findById(slotId);
     if (!slot) {
@@ -459,18 +458,14 @@ export const getBookingBySlot = async (req, res, next) => {
     }
 
     if (!booking) {
-      console.log(`[BACKEND DEBUG] No active booking discovered for slot ID: ${slotId}`);
       return res.status(404).json({ success: false, message: 'No active booking found for this slot.' });
     }
-
-    console.log(`[BACKEND DEBUG] Discovered active booking: ${booking.bookingId} for slot ID: ${slotId}`);
 
     res.status(200).json({
       success: true,
       booking
     });
   } catch (error) {
-    console.error(`[BACKEND DEBUG] Error retrieving booking by slot ID: ${error.message}`);
     next(error);
   }
 };

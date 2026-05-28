@@ -45,7 +45,7 @@ app.use(helmet());
 app.use(mongoSanitize());
 
 /* =========================
-   RATE LIMIT
+   RATE LIMIT & CORS CONFIGURATIONS
 ========================= */
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -55,19 +55,45 @@ const limiter = rateLimit({
   message: { success: false, message: 'Too many requests' }
 });
 
-app.use('/api/', limiter);
+const authLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 5, // Limit each IP to 5 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many authentication attempts, please try again after 10 minutes' }
+});
 
-/* =========================
-   CORS (FIXED - ALLOW ALL ORIGINS)
-========================= */
-app.use(cors({
-  origin: true, // 🔥 allows ALL origins (fix for your issue)
+app.use('/api/', limiter);
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+
+const whitelist = ['http://localhost:5173', 'http://localhost:5174'];
+if (process.env.FRONTEND_URL) {
+  process.env.FRONTEND_URL.split(',').forEach(o => whitelist.push(o.trim()));
+}
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    
+    const isWhitelisted = whitelist.includes(origin) || 
+                          origin.endsWith('.vercel.app') ||
+                          /https?:\/\/localhost:\d+/.test(origin);
+                          
+    if (isWhitelisted) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  optionsSuccessStatus: 200
+};
 
-app.options('*', cors());
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 /* =========================
    BODY PARSER

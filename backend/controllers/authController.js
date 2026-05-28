@@ -25,6 +25,15 @@ export const register = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Passwords do not match' });
     }
 
+    // Validate password strength
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long' });
+    }
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{6,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({ success: false, message: 'Password must contain at least one letter and one number' });
+    }
+
     // Check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -219,6 +228,15 @@ export const resetPassword = async (req, res, next) => {
 
     if (password !== confirmPassword) {
       return res.status(400).json({ success: false, message: 'Passwords do not match' });
+    }
+
+    // Validate password strength
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long' });
+    }
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{6,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({ success: false, message: 'Password must contain at least one letter and one number' });
     }
 
     // Set new password (will be hashed automatically by pre-save pre middleware)

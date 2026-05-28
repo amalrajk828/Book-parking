@@ -11,16 +11,19 @@ const bookingSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
+    index: true,
   },
   slot: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ParkingSlot',
     required: true,
+    index: true,
   },
   area: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ParkingArea',
     required: true,
+    index: true,
   },
   vehicleDetails: {
     type: { type: String, enum: ['Car', 'Bike', 'Truck'], required: true },

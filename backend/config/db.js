@@ -9,7 +9,7 @@ const connectDB = async (retries = 5, delay = 5000) => {
       });
       console.log(`\n==================================================`);
       console.log(`[DATABASE CONNECTED SUCCESS]`);
-      console.log(`Host: ${conn.connection.host}`);
+      console.log('MongoDB Connected Successfully');
       console.log(`Database Name: ${conn.connection.name}`);
       console.log(`==================================================\n`);
       return;
