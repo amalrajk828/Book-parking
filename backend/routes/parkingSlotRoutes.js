@@ -1,5 +1,6 @@
 import express from 'express';
-import { getBookingBySlot, updateSlotStatusSafely } from '../controllers/bookingController.js';
+import { getBookingBySlot } from '../controllers/bookingController.js';
+import { updateSlotStatus } from '../controllers/parkingSlotController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorize } from '../middleware/roleMiddleware.js';
 
@@ -9,7 +10,7 @@ const router = express.Router();
 router.get('/:slotId/booking', protect, authorize('guide', 'admin'), getBookingBySlot);
 
 // Update parking slot status safely (For guides/admins inspecting slot matrices)
-router.put('/:slotId/status', protect, authorize('guide', 'admin'), updateSlotStatusSafely);
-router.patch('/:slotId/status', protect, authorize('guide', 'admin'), updateSlotStatusSafely);
+router.put('/:id/status', protect, authorize('guide', 'admin'), updateSlotStatus);
+router.patch('/:id/status', protect, authorize('guide', 'admin'), updateSlotStatus);
 
 export default router;
