@@ -8,11 +8,11 @@ import { useToast } from '../../context/ToastContext';
 const ManageAreas = () => {
   const dispatch = useDispatch();
   const { areas, loading } = useSelector((state) => state.parking);
-  
+
   // Guides list for assign dropdown
   const [guides, setGuides] = useState([]);
   const { addToast } = useToast();
-  
+
   // Form states
   const [showAddForm, setShowAddForm] = useState(false);
   const [name, setName] = useState('');
@@ -21,10 +21,10 @@ const ManageAreas = () => {
   const [city, setCity] = useState('');
   const [feePerHour, setFeePerHour] = useState(50);
   const [totalSlots, setTotalSlots] = useState(10);
-  
+
   useEffect(() => {
     dispatch(fetchAreas());
-    
+
     // Fetch guides list
     const fetchGuidesList = async () => {
       try {
@@ -98,7 +98,7 @@ const ManageAreas = () => {
       {showAddForm && (
         <form onSubmit={handleSubmit} className="glass-card p-6 rounded-2xl border border-slate-200/50 dark:border-zinc-800/50 flex flex-col gap-4 max-w-2xl">
           <h3 className="font-extrabold text-slate-800 dark:text-white text-base">New Parking Lot</h3>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Structure Name</label>

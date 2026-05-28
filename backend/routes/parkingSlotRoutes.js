@@ -10,5 +10,6 @@ router.get('/:slotId/booking', protect, authorize('guide', 'admin'), getBookingB
 
 // Update parking slot status safely (For guides/admins inspecting slot matrices)
 router.put('/:slotId/status', protect, authorize('guide', 'admin'), updateSlotStatusSafely);
+router.patch('/:slotId/status', protect, authorize('guide', 'admin'), updateSlotStatusSafely);
 
 export default router;

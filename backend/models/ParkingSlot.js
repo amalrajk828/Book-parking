@@ -15,7 +15,7 @@ const parkingSlotSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['available', 'reserved', 'occupied', 'expired'],
+    enum: ['available', 'reserved', 'occupied', 'expired', 'maintenance', 'blocked'],
     default: 'available',
   },
   vehicleDetails: {

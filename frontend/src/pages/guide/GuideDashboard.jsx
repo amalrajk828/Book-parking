@@ -25,6 +25,7 @@ const GuideDashboard = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [updatingSlotStatus, setUpdatingSlotStatus] = useState(false);
   const [checkoutSummary, setCheckoutSummary] = useState(null);
+  const [confirmStatusChange, setConfirmStatusChange] = useState(null);
 
   const getGuideArea = useCallback(async () => {
     setLoading(true);
@@ -56,10 +57,11 @@ const GuideDashboard = () => {
     setSelectedSlot(slot);
     setBookingDetails(null);
     setCheckoutSummary(null);
+    setConfirmStatusChange(null);
     setModalError('');
     setModalOpen(true);
 
-    if (slot.status === 'available') {
+    if (['available', 'maintenance', 'blocked'].includes(slot.status)) {
       setModalLoading(false);
       return;
     }
@@ -122,7 +124,7 @@ const GuideDashboard = () => {
     if (!selectedSlot) return;
     setUpdatingSlotStatus(true);
     try {
-      const res = await api.put(`/slots/${selectedSlot._id}/status`, { status: newStatus });
+      const res = await api.patch(`/slots/${selectedSlot._id}/status`, { status: newStatus });
       if (res.data.success) {
         addToast(res.data.message || 'Slot status updated successfully', 'success');
         setModalOpen(false);
@@ -226,7 +228,7 @@ const GuideDashboard = () => {
                 </div>
                 
                 {/* Legend */}
-                <div className="flex items-center gap-3 text-[9px] font-black uppercase tracking-wider">
+                <div className="flex flex-wrap items-center gap-3 text-[9px] font-black uppercase tracking-wider">
                   <div className="flex items-center gap-1.5">
                     <span className="h-3 w-3 rounded bg-green-500/20 border border-green-500" />
                     <span>Free</span>
@@ -243,6 +245,14 @@ const GuideDashboard = () => {
                     <span className="h-3 w-3 rounded bg-zinc-700/20 border border-zinc-600" />
                     <span>Expired</span>
                   </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-3 w-3 rounded bg-orange-500/20 border border-orange-500" />
+                    <span>Maint</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-3 w-3 rounded bg-gray-500/20 border border-gray-500" />
+                    <span>Blocked</span>
+                  </div>
                 </div>
               </div>
               
@@ -255,6 +265,10 @@ const GuideDashboard = () => {
                     colorClass = 'neon-glow-amber cursor-pointer';
                   } else if (slot.status === 'expired') {
                     colorClass = 'neon-glow-zinc cursor-pointer';
+                  } else if (slot.status === 'maintenance') {
+                    colorClass = 'neon-glow-orange cursor-pointer';
+                  } else if (slot.status === 'blocked') {
+                    colorClass = 'neon-glow-gray cursor-pointer';
                   }
 
                   return (
@@ -268,7 +282,7 @@ const GuideDashboard = () => {
                     >
                       <span className="text-base font-black">{slot.slotId.substring(slot.slotId.lastIndexOf('-') + 1)}</span>
                       <span className="text-[9px] font-black uppercase mt-0.5 tracking-wider">
-                        {slot.status === 'reserved' ? 'Booked' : slot.status === 'occupied' ? 'Parked' : slot.status}
+                        {slot.status === 'reserved' ? 'Booked' : slot.status === 'occupied' ? 'Parked' : slot.status === 'maintenance' ? 'Maint' : slot.status}
                       </span>
                     </button>
                   );
@@ -299,7 +313,11 @@ const GuideDashboard = () => {
                 </div>
                 <div className="flex items-start gap-2.5">
                   <span className="h-5 w-5 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center shrink-0 font-bold">3</span>
-                  <p>Clicking any booked or parked slot will open a detailed client inspection panel instantly.</p>
+                  <p>Slots colored <span className="text-orange-500 font-bold">Orange</span> represent slots under maintenance, and <span className="text-zinc-400 font-bold">Gray</span> represent blocked slots.</p>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <span className="h-5 w-5 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center shrink-0 font-bold">4</span>
+                  <p>Clicking any slot will open its detailed inspection and status management panel instantly.</p>
                 </div>
               </div>
 
@@ -400,15 +418,61 @@ const GuideDashboard = () => {
                       </span>
                     </div>
                   </div>
-                ) : selectedSlot?.status === 'available' ? (
+                ) : confirmStatusChange ? (
+                  <div className="flex flex-col gap-6 text-center py-6">
+                    <div className="h-14 w-14 rounded-full bg-orange-500/10 text-orange-500 flex items-center justify-center mx-auto animate-pulse">
+                      <FiAlertTriangle size={28} />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-black text-slate-800 dark:text-white font-sans">Confirm Status Override</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 max-w-sm mx-auto leading-relaxed font-bold">
+                        Are you sure you want to change slot <span className="text-slate-800 dark:text-white font-extrabold uppercase">{selectedSlot?.slotId}</span> status from <span className="text-amber-500 font-extrabold uppercase">{selectedSlot?.status}</span> to <span className="text-blue-500 font-extrabold uppercase">{confirmStatusChange === 'reserved' ? 'Booked' : confirmStatusChange === 'occupied' ? 'Parked' : confirmStatusChange}</span>?
+                      </p>
+                    </div>
+                    <div className="flex gap-3 justify-center mt-2">
+                      <button
+                        onClick={() => {
+                          handleUpdateSlotStatus(confirmStatusChange);
+                          setConfirmStatusChange(null);
+                        }}
+                        disabled={updatingSlotStatus}
+                        className="btn-primary py-2 px-5 text-xs font-bold uppercase tracking-wider shrink-0"
+                      >
+                        {updatingSlotStatus ? 'Updating...' : 'Yes, Confirm Override'}
+                      </button>
+                      <button
+                        onClick={() => setConfirmStatusChange(null)}
+                        className="btn-secondary py-2 px-5 text-xs font-bold uppercase tracking-wider shrink-0"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : ['available', 'maintenance', 'blocked'].includes(selectedSlot?.status) ? (
                   <div className="flex flex-col gap-6 text-sm">
-                    {/* Vacant Info Panel */}
-                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-start gap-2.5">
+                    {/* Status Info Panel */}
+                    <div className={`p-4 border rounded-2xl flex items-start gap-2.5 ${
+                      selectedSlot?.status === 'available'
+                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                        : selectedSlot?.status === 'maintenance'
+                        ? 'bg-orange-500/10 border-orange-500/20 text-orange-600 dark:text-orange-400'
+                        : 'bg-zinc-500/10 border-zinc-500/20 text-zinc-600 dark:text-zinc-400'
+                    }`}>
                       <FiInfo className="shrink-0 mt-0.5" size={18} />
                       <div className="flex flex-col gap-0.5">
-                        <span className="font-extrabold text-xs uppercase tracking-wider">Vacant Parking Space</span>
+                        <span className="font-extrabold text-xs uppercase tracking-wider">
+                          {selectedSlot?.status === 'available'
+                            ? 'Vacant Parking Space'
+                            : selectedSlot?.status === 'maintenance'
+                            ? 'Slot Under Maintenance'
+                            : 'Blocked Parking Space'}
+                        </span>
                         <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 mt-0.5">
-                          This slot is currently empty (Available) and has no active reservation. Guides can safely monitor the space or manually update its status if needed.
+                          {selectedSlot?.status === 'available'
+                            ? 'This slot is currently empty (Available) and has no active reservation. Guides can safely monitor the space or manually update its status if needed.'
+                            : selectedSlot?.status === 'maintenance'
+                            ? 'This slot is currently undergoing maintenance or repairs and is temporarily unavailable for reservations.'
+                            : 'This slot has been blocked by guide officers or system administrators and is closed for customer bookings.'}
                         </p>
                       </div>
                     </div>
@@ -422,24 +486,58 @@ const GuideDashboard = () => {
                       </div>
                       <div className="flex flex-col gap-0.5">
                         <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Slot Status</span>
-                        <span className="text-sm font-black text-emerald-500 mt-0.5 uppercase flex items-center gap-1">
-                          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" /> Available
+                        <span className={`text-sm font-black mt-0.5 uppercase flex items-center gap-1.5 ${
+                          selectedSlot?.status === 'available'
+                            ? 'text-emerald-500'
+                            : selectedSlot?.status === 'maintenance'
+                            ? 'text-orange-500'
+                            : 'text-slate-500 dark:text-slate-400'
+                        }`}>
+                          <span className={`h-2.5 w-2.5 rounded-full animate-pulse ${
+                            selectedSlot?.status === 'available'
+                              ? 'bg-emerald-500'
+                              : selectedSlot?.status === 'maintenance'
+                              ? 'bg-orange-500'
+                              : 'bg-zinc-500'
+                          }`} />
+                          {selectedSlot?.status}
                         </span>
                       </div>
                     </div>
+
+                    {/* Vehicle Details display if present */}
+                    {selectedSlot?.vehicleDetails?.number && (
+                      <div className="p-4 bg-slate-50 dark:bg-zinc-900/30 border border-slate-200/20 dark:border-zinc-800/40 rounded-2xl flex flex-col gap-2 font-sans">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Saved Vehicle Information</span>
+                        <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
+                          <div>Plate: <span className="font-extrabold text-slate-800 dark:text-white uppercase">{selectedSlot.vehicleDetails.number}</span></div>
+                          <div>Type: <span className="font-extrabold text-slate-800 dark:text-white">{selectedSlot.vehicleDetails.type || 'Car'}</span></div>
+                          <div className="col-span-2">Owner: <span className="font-extrabold text-slate-800 dark:text-white">{selectedSlot.vehicleDetails.owner || 'N/A'}</span></div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Manual override status selection */}
                     <div className="border-t border-slate-200/10 dark:border-zinc-800/30 pt-4 flex flex-col gap-2.5">
                       <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Safe Status Override</label>
                       <div className="flex flex-wrap gap-2">
-                        {['reserved', 'occupied', 'expired'].map((st) => (
+                        {[
+                          { code: 'available', label: 'Free', colorClass: 'border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500' },
+                          { code: 'reserved', label: 'Booked', colorClass: 'border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-500' },
+                          { code: 'occupied', label: 'Parked', colorClass: 'border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500' },
+                          { code: 'expired', label: 'Expired', colorClass: 'border-zinc-500/30 bg-zinc-500/10 hover:bg-zinc-500/20 text-zinc-500' },
+                          { code: 'maintenance', label: 'Maint', colorClass: 'border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500' },
+                          { code: 'blocked', label: 'Blocked', colorClass: 'border-gray-500/30 bg-gray-500/10 hover:bg-gray-500/20 text-gray-500 dark:text-gray-400' },
+                        ].map((st) => (
                           <button
-                            key={st}
-                            onClick={() => handleUpdateSlotStatus(st)}
-                            disabled={updatingSlotStatus}
-                            className="btn-secondary py-1.5 px-3.5 text-[10px] font-extrabold uppercase tracking-wide rounded-lg flex items-center justify-center shrink-0 border border-slate-200/30 dark:border-zinc-800/30"
+                            key={st.code}
+                            onClick={() => setConfirmStatusChange(st.code)}
+                            disabled={updatingSlotStatus || selectedSlot?.status === st.code}
+                            className={`py-1.5 px-3 text-[10px] font-extrabold uppercase tracking-wide rounded-lg border transition-all duration-300 active:scale-95 ${st.colorClass} ${
+                              selectedSlot?.status === st.code ? 'opacity-40 cursor-not-allowed border-dashed' : ''
+                            }`}
                           >
-                            Set {st === 'reserved' ? 'Booked' : st === 'occupied' ? 'Parked' : st}
+                            Set {st.label}
                           </button>
                         ))}
                       </div>
@@ -461,14 +559,23 @@ const GuideDashboard = () => {
                     <div className="border-t border-slate-200/10 dark:border-zinc-800/30 pt-4 flex flex-col gap-2.5">
                       <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Safe Status Override</label>
                       <div className="flex flex-wrap gap-2">
-                        {['available', 'reserved', 'occupied', 'expired'].map((st) => (
+                        {[
+                          { code: 'available', label: 'Free', colorClass: 'border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500' },
+                          { code: 'reserved', label: 'Booked', colorClass: 'border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-500' },
+                          { code: 'occupied', label: 'Parked', colorClass: 'border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500' },
+                          { code: 'expired', label: 'Expired', colorClass: 'border-zinc-500/30 bg-zinc-500/10 hover:bg-zinc-500/20 text-zinc-500' },
+                          { code: 'maintenance', label: 'Maint', colorClass: 'border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500' },
+                          { code: 'blocked', label: 'Blocked', colorClass: 'border-gray-500/30 bg-gray-500/10 hover:bg-gray-500/20 text-gray-500 dark:text-gray-400' },
+                        ].map((st) => (
                           <button
-                            key={st}
-                            onClick={() => handleUpdateSlotStatus(st)}
-                            disabled={updatingSlotStatus}
-                            className="btn-secondary py-1.5 px-3.5 text-[10px] font-extrabold uppercase tracking-wide rounded-lg border border-slate-200/30 dark:border-zinc-800/30 font-bold"
+                            key={st.code}
+                            onClick={() => setConfirmStatusChange(st.code)}
+                            disabled={updatingSlotStatus || selectedSlot?.status === st.code}
+                            className={`py-1.5 px-3 text-[10px] font-extrabold uppercase tracking-wide rounded-lg border transition-all duration-300 active:scale-95 ${st.colorClass} ${
+                              selectedSlot?.status === st.code ? 'opacity-40 cursor-not-allowed border-dashed' : ''
+                            }`}
                           >
-                            Set {st === 'reserved' ? 'Booked' : st === 'occupied' ? 'Parked' : st}
+                            Set {st.label}
                           </button>
                         ))}
                       </div>
@@ -591,14 +698,23 @@ const GuideDashboard = () => {
                     <div className="border-t border-slate-200/10 dark:border-zinc-800/30 pt-4 flex flex-col gap-2.5">
                       <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest animate-glow">Safe Status Override</label>
                       <div className="flex flex-wrap gap-2">
-                        {['available', 'reserved', 'occupied', 'expired'].map((st) => (
+                        {[
+                          { code: 'available', label: 'Free', colorClass: 'border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500' },
+                          { code: 'reserved', label: 'Booked', colorClass: 'border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-500' },
+                          { code: 'occupied', label: 'Parked', colorClass: 'border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500' },
+                          { code: 'expired', label: 'Expired', colorClass: 'border-zinc-500/30 bg-zinc-500/10 hover:bg-zinc-500/20 text-zinc-500' },
+                          { code: 'maintenance', label: 'Maint', colorClass: 'border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500' },
+                          { code: 'blocked', label: 'Blocked', colorClass: 'border-gray-500/30 bg-gray-500/10 hover:bg-gray-500/20 text-gray-500 dark:text-gray-400' },
+                        ].map((st) => (
                           <button
-                            key={st}
-                            onClick={() => handleUpdateSlotStatus(st)}
-                            disabled={updatingSlotStatus}
-                            className="btn-secondary py-1.5 px-3.5 text-[10px] font-extrabold uppercase tracking-wide rounded-lg border border-slate-200/30 dark:border-zinc-800/30 font-bold hover:border-blue-500/40"
+                            key={st.code}
+                            onClick={() => setConfirmStatusChange(st.code)}
+                            disabled={updatingSlotStatus || selectedSlot?.status === st.code}
+                            className={`py-1.5 px-3 text-[10px] font-extrabold uppercase tracking-wide rounded-lg border transition-all duration-300 active:scale-95 ${st.colorClass} ${
+                              selectedSlot?.status === st.code ? 'opacity-40 cursor-not-allowed border-dashed' : ''
+                            }`}
                           >
-                            Set {st === 'reserved' ? 'Booked' : st === 'occupied' ? 'Parked' : st}
+                            Set {st.label}
                           </button>
                         ))}
                       </div>

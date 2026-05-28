@@ -62,7 +62,7 @@ export const getParkingAreas = async (req, res, next) => {
     let query = {};
 
     if (city) {
-      query.city = { $regex: new RegExp('^' + city.trim() + '$', 'i') };
+      query.city = { $regex: city, $options: 'i' };
     }
 
     if (vehicleType) {
@@ -112,7 +112,7 @@ export const getParkingAreaById = async (req, res, next) => {
 export const updateParkingArea = async (req, res, next) => {
   try {
     const { name, address, city, vehicleTypes, feePerHour, extraFeePerHour, coordinates } = req.body;
-    
+
     let area = await ParkingArea.findById(req.params.id);
     if (!area) {
       return res.status(404).json({ success: false, message: 'Parking Area not found' });
@@ -152,7 +152,7 @@ export const deleteParkingArea = async (req, res, next) => {
 
     // Delete all associated slots
     await ParkingSlot.deleteMany({ area: area._id });
-    
+
     // Remove guide assignments referring to this area
     await User.updateMany({ assignedArea: area._id }, { $set: { assignedArea: null } });
 
@@ -174,7 +174,7 @@ export const deleteParkingArea = async (req, res, next) => {
 export const assignGuide = async (req, res, next) => {
   try {
     const { guideId } = req.body;
-    
+
     const area = await ParkingArea.findById(req.params.id);
     if (!area) {
       return res.status(404).json({ success: false, message: 'Parking Area not found' });
@@ -221,60 +221,3 @@ export const assignGuide = async (req, res, next) => {
     next(error);
   }
 };
-
-// @desc    Get all unique city names in Title Case, sorted alphabetically (Public)
-// @route   GET /api/areas/cities
-// @access  Public
-export const getUniqueCities = async (req, res, next) => {
-  try {
-    const cities = await ParkingArea.distinct('city');
-    
-    // Normalize and filter duplicates case-insensitively
-    const normalizedCities = [...new Set(cities.map(c => {
-      if (!c) return '';
-      return c.trim().toLowerCase().replace(/\b\w/g, ch => ch.toUpperCase());
-    }))]
-      .filter(Boolean)
-      .sort((a, b) => a.localeCompare(b));
-
-    res.status(200).json({
-      success: true,
-      count: normalizedCities.length,
-      cities: normalizedCities
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Self-invoking migration to Title Case normalize all legacy city names
-const migrateCitiesToTitleCase = async () => {
-  try {
-    const areas = await ParkingArea.find({ city: { $exists: true } });
-    let updatedCount = 0;
-    
-    for (let area of areas) {
-      if (area.city) {
-        const normalized = area.city
-          .trim()
-          .toLowerCase()
-          .replace(/\b\w/g, c => c.toUpperCase());
-        
-        if (area.city !== normalized) {
-          area.city = normalized;
-          await area.save();
-          updatedCount++;
-        }
-      }
-    }
-    
-    if (updatedCount > 0) {
-      console.log(`[MIGRATION SUCCESS] Normalized ${updatedCount} parking area cities to Title Case.`);
-    }
-  } catch (error) {
-    console.error('[MIGRATION ERROR] Failed to run city Title Case migration:', error.message);
-  }
-};
-
-// Fire the migration asynchronously in background upon import
-setTimeout(migrateCitiesToTitleCase, 2000);

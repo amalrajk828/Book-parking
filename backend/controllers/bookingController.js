@@ -1,4 +1,5 @@
 import Booking from '../models/Booking.js';
+import GuideActivityLog from '../models/GuideActivityLog.js';
 import mongoose from 'mongoose';
 import ParkingArea from '../models/ParkingArea.js';
 import ParkingSlot from '../models/ParkingSlot.js';
@@ -470,15 +471,33 @@ export const getBookingBySlot = async (req, res, next) => {
   }
 };
 
+// @desc    Automatically sync slot status counts inside parent ParkingArea model
+export const syncParkingAreaCounts = async (areaId) => {
+  try {
+    const totalSlots = await ParkingSlot.countDocuments({ area: areaId });
+    const availableSlots = await ParkingSlot.countDocuments({ area: areaId, status: 'available' });
+    const occupiedSlots = await ParkingSlot.countDocuments({ area: areaId, status: 'occupied' });
+
+    await ParkingArea.findByIdAndUpdate(areaId, {
+      totalSlots,
+      availableSlots,
+      occupiedSlots
+    });
+  } catch (error) {
+    console.error(`[ERROR] Failed to synchronize slot status counts for area ${areaId}:`, error);
+  }
+};
+
 // @desc    Update slot status safely (for guides/admins)
-// @route   PUT /api/slots/:slotId/status
+// @route   PUT/PATCH /api/slots/:slotId/status
 // @access  Private (Guide / Admin)
 export const updateSlotStatusSafely = async (req, res, next) => {
   try {
     const { slotId } = req.params;
     const { status } = req.body;
 
-    if (!['available', 'reserved', 'occupied', 'expired'].includes(status)) {
+    const allowedStatuses = ['available', 'reserved', 'occupied', 'expired', 'maintenance', 'blocked'];
+    if (!allowedStatuses.includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid slot status value.' });
     }
 
@@ -487,7 +506,49 @@ export const updateSlotStatusSafely = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Slot not found.' });
     }
 
+    // Role & Area Authorization Checks:
+    // Guides can only update slots within their assigned parking area
+    if (req.user.role === 'guide') {
+      if (!req.user.assignedArea || slot.area.toString() !== req.user.assignedArea.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: You can only manage slots within your assigned parking area.'
+        });
+      }
+    }
+
     const oldStatus = slot.status;
+
+    // Validation Rules check to prevent conflicts:
+    // 1. occupied -> available: block if active booking exists
+    if (oldStatus === 'occupied' && status === 'available') {
+      const activeBooking = await Booking.findOne({
+        slot: slot._id,
+        status: { $in: ['confirmed', 'checked-in'] }
+      });
+      if (activeBooking) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot mark occupied slot as available while an active booking exists. Please check out the customer first.'
+        });
+      }
+    }
+
+    // 2. reserved -> maintenance: block if booking is active
+    if (oldStatus === 'reserved' && status === 'maintenance') {
+      const activeBooking = await Booking.findOne({
+        slot: slot._id,
+        status: { $in: ['confirmed', 'checked-in'] }
+      });
+      if (activeBooking) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot mark reserved slot as maintenance while there is an active booking.'
+        });
+      }
+    }
+
+    // Process status updates
     slot.status = status;
 
     // If status changed to available, free up booking bindings
@@ -513,9 +574,27 @@ export const updateSlotStatusSafely = async (req, res, next) => {
           await booking.save();
         }
       }
+    } else if (status === 'maintenance' || status === 'blocked') {
+      // Free up bindings if slot is marked as maintenance or blocked and no active bookings exist
+      slot.bookingDetails = { bookingId: null };
+      slot.activeTiming = { start: null, end: null };
+      slot.vehicleDetails = { type: 'Car', number: '', owner: '' };
     }
 
     await slot.save();
+
+    // Database counts synchronization
+    await syncParkingAreaCounts(slot.area);
+
+    // Activity Logging for Guide Slot Modifications
+    await GuideActivityLog.create({
+      guide: req.user._id,
+      guideName: req.user.username,
+      slotId: slot.slotId,
+      previousStatus: oldStatus,
+      newStatus: status,
+      timestamp: new Date()
+    });
 
     res.status(200).json({
       success: true,

@@ -100,6 +100,24 @@
   @apply border-zinc-700 bg-zinc-800/[0.02] text-zinc-500;
 }
 
+.neon-glow-orange {
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.15);
+  @apply border-orange-500 bg-orange-500/[0.03] text-orange-600 dark:text-orange-400;
+}
+.neon-glow-orange:hover {
+  box-shadow: 0 0 18px rgba(249, 115, 22, 0.25);
+  @apply bg-orange-500/[0.08];
+}
+
+.neon-glow-gray {
+  box-shadow: 0 0 12px rgba(107, 114, 128, 0.15);
+  @apply border-gray-400 bg-gray-400/[0.03] text-gray-500 dark:text-gray-400;
+}
+.neon-glow-gray:hover {
+  box-shadow: 0 0 18px rgba(107, 114, 128, 0.25);
+  @apply bg-gray-400/[0.08];
+}
+
 /* Premium Keyframe Animations */
 @keyframes float {
   0% { transform: translateY(0px); }
