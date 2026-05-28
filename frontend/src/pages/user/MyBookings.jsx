@@ -188,7 +188,7 @@ const MyBookings = () => {
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <span className="text-slate-400 font-extrabold uppercase tracking-widest text-[9px]">Estimated Fee</span>
-                      <span className="font-extrabold text-blue-600 dark:text-blue-400">{settings?.currency || '₹'}{b.estimatedAmount}</span>
+                      <span className="font-extrabold text-blue-600 dark:text-blue-400">{settings?.currencySymbol || '₹'}{b.estimatedAmount}</span>
                     </div>
                   </div>
                 </div>

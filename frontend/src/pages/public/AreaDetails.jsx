@@ -138,7 +138,7 @@ const AreaDetails = () => {
             <div className="grid grid-cols-3 gap-4 border-t border-slate-200/10 dark:border-zinc-900/30 pt-6 mt-6 font-semibold">
               <div className="flex flex-col gap-1.5">
                 <span className="text-slate-400 font-extrabold uppercase tracking-widest text-[9px]">Fee per Hour</span>
-                <span className="text-lg font-black text-blue-600 dark:text-blue-400">{settings?.currency || '₹'}{selectedArea.feePerHour}</span>
+                <span className="text-lg font-black text-blue-600 dark:text-blue-400">{settings?.currencySymbol || '₹'}{selectedArea.feePerHour}</span>
               </div>
               <div className="flex flex-col gap-1.5">
                 <span className="text-slate-400 font-extrabold uppercase tracking-widest text-[9px]">Operating Hours</span>
@@ -283,7 +283,7 @@ const AreaDetails = () => {
                   </div>
                   <div className="flex justify-between items-center border-t border-slate-200/10 dark:border-zinc-900/30 pt-3 text-xs font-extrabold uppercase mt-1">
                     <span className="text-slate-400">Grand Total Paid</span>
-                    <span className="text-base text-blue-600 dark:text-blue-400">{settings?.currency || '₹'}{estimatedCost}</span>
+                    <span className="text-base text-blue-600 dark:text-blue-400">{settings?.currencySymbol || '₹'}{estimatedCost}</span>
                   </div>
                 </div>
 
@@ -422,7 +422,7 @@ const AreaDetails = () => {
 
                 <div className="flex justify-between items-center border-t border-slate-200/10 dark:border-zinc-900/30 pt-4 mt-2 font-extrabold text-xs uppercase tracking-wide">
                   <span className="text-slate-400">Total Price Estimate:</span>
-                  <span className="text-xl text-blue-600 dark:text-blue-400">{settings?.currency || '₹'}{estimatedCost}</span>
+                  <span className="text-xl text-blue-600 dark:text-blue-400">{settings?.currencySymbol || '₹'}{estimatedCost}</span>
                 </div>
 
                 <button

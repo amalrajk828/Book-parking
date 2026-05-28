@@ -15,7 +15,7 @@ import bookingRoutes from './routes/bookingRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import reservationRoutes from './routes/reservationRoutes.js';
 import parkingSlotRoutes from './routes/parkingSlotRoutes.js';
-import settingsRoutes from './routes/settingsRoutes.js';
+import configRoutes from './routes/configRoutes.js';
 
 dotenv.config();
 
@@ -103,7 +103,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/areas', parkingAreaRoutes);
 app.use('/api/bookings', bookingRoutes);
-app.use('/api', settingsRoutes); // Mounted before /api/admin to resolve path matching precedence
+app.use('/api', configRoutes); // Mounted before /api/admin to resolve path matching precedence
 app.use('/api/admin', adminRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/slots', parkingSlotRoutes);

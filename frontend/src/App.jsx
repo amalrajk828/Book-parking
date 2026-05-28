@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store/store';
-import { ThemeProvider } from './context/ThemeContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
 import { fetchSettings } from './features/settingsSlice';
 
@@ -47,13 +47,21 @@ import SettingsDashboard from './pages/admin/SettingsDashboard';
 const AppContent = () => {
   const dispatch = useDispatch();
   const { isAuthenticated, user } = useSelector((state) => state.auth);
-  const { settings, loading } = useSelector((state) => state.settings);
+  const { settings } = useSelector((state) => state.settings);
+  const { setThemeMode } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Fetch settings on application startup
   useEffect(() => {
     dispatch(fetchSettings());
   }, [dispatch]);
+
+  // Synchronize dynamic theme mode configuration
+  useEffect(() => {
+    if (settings?.themeMode) {
+      setThemeMode(settings.themeMode);
+    }
+  }, [settings?.themeMode, setThemeMode]);
 
   // Inject Primary Color Theme Dynamically
   useEffect(() => {

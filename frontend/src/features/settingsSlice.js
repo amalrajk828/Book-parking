@@ -6,7 +6,7 @@ export const fetchSettings = createAsyncThunk(
   'settings/fetchSettings',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/settings');
+      const response = await api.get('/config');
       if (response.data.success) {
         return response.data.data;
       }
@@ -24,7 +24,7 @@ export const updateSettings = createAsyncThunk(
   'settings/updateSettings',
   async (settingsData, { rejectWithValue }) => {
     try {
-      const response = await api.put('/admin/settings', settingsData);
+      const response = await api.put('/config', settingsData);
       if (response.data.success) {
         return response.data.data;
       }
@@ -40,14 +40,23 @@ export const updateSettings = createAsyncThunk(
 const initialState = {
   settings: {
     websiteName: 'ParkSmart',
-    logoUrl: '',
-    primaryColor: '#3b82f6',
-    footerText: 'Next-generation IoT smart parking reservation and gate checkout platform.',
+    websiteLogo: '',
     contactEmail: 'amalrajk828@gmail.com',
-    supportPhone: '+91 7594005431',
-    currency: '₹',
-    termsText: 'Standard booking terms apply.',
+    contactPhone: '+91 7594005431',
+    supportAddress: '123 Smart Way, Tech City',
+    currency: 'INR',
+    currencySymbol: '₹',
+    themeMode: 'system',
+    primaryColor: '#3b82f6',
     maintenanceMode: false,
+    maintenanceMessage: 'System under maintenance. We will be back shortly.',
+    footerText: 'Next-generation IoT smart parking reservation and gate checkout platform.',
+    socialLinks: {
+      facebook: '',
+      instagram: '',
+      twitter: '',
+      linkedin: ''
+    }
   },
   loading: false,
   error: null,

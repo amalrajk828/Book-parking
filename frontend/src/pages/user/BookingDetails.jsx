@@ -342,18 +342,18 @@ const BookingDetails = () => {
               <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-4">Invoice Ledger</span>
               <div className="flex flex-col gap-3.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
                 <div className="flex justify-between">
-                  <span>Reserved Base Price ({activeBooking.reservedHours} Hrs @ {settings?.currency || '₹'}{activeBooking.area?.feePerHour || 50}/hr)</span>
-                  <span className="text-slate-800 dark:text-white font-bold">{settings?.currency || '₹'}{activeBooking.estimatedAmount}</span>
+                  <span>Reserved Base Price ({activeBooking.reservedHours} Hrs @ {settings?.currencySymbol || '₹'}{activeBooking.area?.feePerHour || 50}/hr)</span>
+                  <span className="text-slate-800 dark:text-white font-bold">{settings?.currencySymbol || '₹'}{activeBooking.estimatedAmount}</span>
                 </div>
                 {activeBooking.extraCharges > 0 && (
                   <div className="flex justify-between text-amber-500">
                     <span className="flex items-center gap-1"><FiAlertTriangle size={12} /> Overtime Additional Charges</span>
-                    <span className="font-extrabold">+ {settings?.currency || '₹'}{activeBooking.extraCharges}</span>
+                    <span className="font-extrabold">+ {settings?.currencySymbol || '₹'}{activeBooking.extraCharges}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center text-sm font-extrabold border-t border-slate-200/10 dark:border-zinc-900/30 pt-3 mt-1 uppercase tracking-wide">
                   <span className="text-slate-800 dark:text-white">Total Amount Paid</span>
-                  <span className="text-base text-blue-600 dark:text-blue-400">{settings?.currency || '₹'}{activeBooking.actualAmount || activeBooking.estimatedAmount}</span>
+                  <span className="text-base text-blue-600 dark:text-blue-400">{settings?.currencySymbol || '₹'}{activeBooking.actualAmount || activeBooking.estimatedAmount}</span>
                 </div>
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1 border-t border-slate-200/10 dark:border-zinc-900/30 pt-2">
                   <span>Payment Status</span>

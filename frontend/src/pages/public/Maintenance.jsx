@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { FiSliders, FiTool, FiMail, FiPhoneCall } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
@@ -17,8 +16,8 @@ const Maintenance = () => {
       {/* Top Brand Header */}
       <header className="w-full max-w-7xl mx-auto px-6 py-6 z-10 flex justify-between items-center">
         <div className="flex items-center gap-3">
-          {settings.logoUrl ? (
-            <img src={settings.logoUrl} alt="Logo" className="h-8 object-contain" />
+          {settings.websiteLogo ? (
+            <img src={settings.websiteLogo} alt="Logo" className="h-8 object-contain" />
           ) : (
             <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-extrabold shadow-md">
               {settings.websiteName.substring(0, 1).toUpperCase()}
@@ -66,7 +65,7 @@ const Maintenance = () => {
           transition={{ delay: 0.2, duration: 0.5 }}
           className="mt-6 text-slate-400 text-sm sm:text-base font-semibold leading-relaxed"
         >
-          We are currently upgrading {settings.websiteName} to bring you an even smarter and faster parking experience. We apologize for the temporary interruption and will be back online shortly.
+          {settings.maintenanceMessage || `We are currently upgrading ${settings.websiteName} to bring you an even smarter and faster parking experience. We apologize for the temporary interruption and will be back online shortly.`}
         </motion.p>
 
         {/* Contact Info Footer Grid */}
@@ -85,13 +84,13 @@ const Maintenance = () => {
               <span>{settings.contactEmail}</span>
             </a>
           )}
-          {settings.supportPhone && (
+          {settings.contactPhone && (
             <a 
-              href={`tel:${settings.supportPhone}`}
+              href={`tel:${settings.contactPhone}`}
               className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-slate-800/40 border border-white/5 text-slate-300 hover:text-white transition-all hover:bg-slate-800/60"
             >
               <FiPhoneCall size={14} className="text-blue-400" />
-              <span>{settings.supportPhone}</span>
+              <span>{settings.contactPhone}</span>
             </a>
           )}
         </motion.div>

@@ -172,7 +172,7 @@ const AreasList = () => {
                       </div>
                       <div className="flex items-center gap-1.5 font-extrabold text-blue-600 dark:text-blue-400">
                         <FiDollarSign />
-                        <span>{settings?.currency || '₹'}{area.feePerHour}/hr</span>
+                        <span>{settings?.currencySymbol || '₹'}{area.feePerHour}/hr</span>
                       </div>
                     </div>
 

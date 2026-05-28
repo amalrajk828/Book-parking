@@ -151,8 +151,8 @@ const Home = () => {
             {/* Logo Column */}
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
-                {settings.logoUrl ? (
-                  <img src={settings.logoUrl} alt={settings.websiteName} className="h-6 object-contain" />
+                {settings.websiteLogo ? (
+                  <img src={settings.websiteLogo} alt={settings.websiteName} className="h-6 object-contain" />
                 ) : (
                   <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-extrabold">
                     {(settings.websiteName || 'ParkSmart').substring(0, 1).toUpperCase()}
@@ -176,10 +176,10 @@ const Home = () => {
             {/* Address Support */}
             <div className="flex flex-col gap-3.5 text-xs text-slate-500 dark:text-slate-400">
               <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest block mb-1">Contacts</span>
-              {settings.supportPhone && (
+              {settings.contactPhone && (
                 <div className="flex items-center gap-2">
                   <FiPhoneCall size={12} className="text-blue-500" />
-                  <span>{settings.supportPhone}</span>
+                  <span>{settings.contactPhone}</span>
                 </div>
               )}
               {settings.contactEmail && (
@@ -188,14 +188,27 @@ const Home = () => {
                   <span>{settings.contactEmail}</span>
                 </div>
               )}
+              {settings.supportAddress && (
+                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">{settings.supportAddress}</p>
+              )}
             </div>
 
             {/* Social handles */}
             <div className="flex flex-col gap-4">
               <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest block">Join Networks</span>
               <div className="flex items-center gap-3 text-slate-400">
-                <a href="#" className="p-2 rounded-lg bg-slate-100 dark:bg-zinc-900 hover:text-blue-500 transition-colors"><FiTwitter size={15} /></a>
-                <a href="#" className="p-2 rounded-lg bg-slate-100 dark:bg-zinc-900 hover:text-blue-500 transition-colors"><FiGithub size={15} /></a>
+                {settings.socialLinks?.twitter && (
+                  <a href={settings.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-slate-100 dark:bg-zinc-900 hover:text-blue-500 transition-colors"><FiTwitter size={15} /></a>
+                )}
+                {settings.socialLinks?.facebook && (
+                  <a href={settings.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-slate-100 dark:bg-zinc-900 hover:text-blue-500 transition-colors"><FiGithub size={15} /></a>
+                )}
+                {(!settings.socialLinks?.twitter && !settings.socialLinks?.facebook) && (
+                  <>
+                    <a href="#" className="p-2 rounded-lg bg-slate-100 dark:bg-zinc-900 hover:text-blue-500 transition-colors"><FiTwitter size={15} /></a>
+                    <a href="#" className="p-2 rounded-lg bg-slate-100 dark:bg-zinc-900 hover:text-blue-500 transition-colors"><FiGithub size={15} /></a>
+                  </>
+                )}
               </div>
             </div>
           </div>

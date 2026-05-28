@@ -38,9 +38,9 @@ const Navbar = ({ toggleSidebar }) => {
             )}
             
             <Link to="/" className="flex items-center gap-2.5 group">
-              {settings.logoUrl ? (
+              {settings.websiteLogo ? (
                 <img 
-                  src={settings.logoUrl} 
+                  src={settings.websiteLogo} 
                   alt={settings.websiteName} 
                   className="h-8 object-contain group-hover:scale-105 transition-all" 
                 />
