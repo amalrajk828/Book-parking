@@ -67,7 +67,20 @@ app.use('/api/', limiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
-const whitelist = ['http://localhost:5173', 'http://localhost:5174'];
+const whitelist = [];
+
+// Support local development origins
+if (process.env.CLIENT_DEV_URL) {
+  process.env.CLIENT_DEV_URL.split(',').forEach(o => whitelist.push(o.trim()));
+} else {
+  whitelist.push('http://localhost:5173');
+  whitelist.push('http://localhost:5174');
+}
+
+// Support production origins
+if (process.env.CLIENT_PROD_URL) {
+  process.env.CLIENT_PROD_URL.split(',').forEach(o => whitelist.push(o.trim()));
+}
 if (process.env.FRONTEND_URL) {
   process.env.FRONTEND_URL.split(',').forEach(o => whitelist.push(o.trim()));
 }
