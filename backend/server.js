@@ -50,26 +50,7 @@ app.use(mongoSanitize());
    2. CORS MIDDLEWARE (MUST BE FIRST IN PIPELINE)
 ============================================== */
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow non-browser requests (like curl, postman, or mobile apps)
-    if (!origin) return callback(null, true);
-    
-    // Dynamic Origin Resolution:
-    // 1. Matches localhost and local IP loopbacks on any port
-    const isLocalhost = /^https?:\/\/localhost(:\d+)?$/.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin);
-    
-    // 2. Matches any Vercel deployments (covering all preview, branch, and production domains)
-    const isVercel = origin.endsWith('.vercel.app');
-    
-    // Localhost is strictly blocked in production mode
-    const isAllowed = isVercel || (process.env.NODE_ENV !== 'production' && isLocalhost);
-    
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: true, // Dynamically reflects request origin, allowing all hosts with credentials support
   credentials: true, // Enables cookie, session header, and JWT token pass-through
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
