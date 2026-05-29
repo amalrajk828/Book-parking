@@ -25,84 +25,80 @@ const Navbar = ({ toggleSidebar }) => {
     <nav className="sticky top-0 z-40 w-full backdrop-blur-md bg-white/70 dark:bg-zinc-950/75 border-b border-slate-200/40 dark:border-zinc-900/50 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          
+
           {/* Logo & Sidebar toggle */}
           <div className="flex items-center gap-3">
             {isAuthenticated && (
-              <button 
+              <button
                 onClick={toggleSidebar}
                 className="p-2 rounded-xl text-slate-500 hover:bg-slate-100/80 dark:hover:bg-zinc-900 md:hidden transition-all active:scale-95"
               >
                 <FiMenu size={20} />
               </button>
             )}
-            
+
             <Link to="/" className="flex items-center gap-2.5 group">
               {settings.websiteLogo ? (
-                <img 
-                  src={settings.websiteLogo} 
-                  alt={settings.websiteName} 
-                  className="h-8 object-contain group-hover:scale-105 transition-all" 
+                <img
+                  src={settings.websiteLogo}
+                  alt={settings.websiteName}
+                  className="h-8 object-contain group-hover:scale-105 transition-all"
                 />
               ) : (
                 <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-extrabold shadow-md shadow-blue-500/10 group-hover:scale-105 transition-all">
-                  {(settings.websiteName || 'ParkSmart').substring(0, 1).toUpperCase()}
+                  {(settings.websiteName).substring(0, 1).toUpperCase()}
                 </div>
               )}
               <span className="font-black text-lg tracking-wider bg-gradient-to-r from-blue-600 to-indigo-500 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent group-hover:opacity-90 transition-opacity uppercase">
-                {settings.websiteName || 'PARKSMART'}
+                {settings.websiteName}
               </span>
             </Link>
           </div>
 
           {/* Navigation Links with Active Indicators */}
           <div className="hidden md:flex items-center gap-7 text-xs font-extrabold tracking-widest uppercase">
-            <Link 
-              to="/" 
-              className={`transition-colors py-1 relative ${
-                isActive('/') 
-                  ? 'text-blue-600 dark:text-blue-400' 
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
+            <Link
+              to="/"
+              className={`transition-colors py-1 relative ${isActive('/')
+                ? 'text-blue-600 dark:text-blue-400'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
             >
               Home
               {isActive('/') && (
                 <span className="absolute bottom-[-18px] left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400 rounded-full" />
               )}
             </Link>
-            <Link 
-              to="/explore" 
-              className={`transition-colors py-1 relative ${
-                isActive('/explore') 
-                  ? 'text-blue-600 dark:text-blue-400' 
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
+            <Link
+              to="/explore"
+              className={`transition-colors py-1 relative ${isActive('/explore')
+                ? 'text-blue-600 dark:text-blue-400'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
             >
               Parking Lots
               {isActive('/explore') && (
                 <span className="absolute bottom-[-18px] left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400 rounded-full" />
               )}
             </Link>
-            <Link 
-              to="/about" 
-              className={`transition-colors py-1 relative ${
-                isActive('/about') 
-                  ? 'text-blue-600 dark:text-blue-400' 
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
+            <Link
+              to="/about"
+              className={`transition-colors py-1 relative ${isActive('/about')
+                ? 'text-blue-600 dark:text-blue-400'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
             >
               About Us
               {isActive('/about') && (
                 <span className="absolute bottom-[-18px] left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400 rounded-full" />
               )}
             </Link>
-            <Link 
-              to="/contact" 
-              className={`transition-colors py-1 relative ${
-                isActive('/contact') 
-                  ? 'text-blue-600 dark:text-blue-400' 
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
+            <Link
+              to="/contact"
+              className={`transition-colors py-1 relative ${isActive('/contact')
+                ? 'text-blue-600 dark:text-blue-400'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
             >
               Contact
               {isActive('/contact') && (
@@ -127,11 +123,11 @@ const Navbar = ({ toggleSidebar }) => {
                 {/* Profile Dashboard link */}
                 <Link
                   to={
-                    user?.role === 'admin' 
-                      ? '/admin' 
-                      : user?.role === 'guide' 
-                      ? '/guide' 
-                      : '/dashboard'
+                    user?.role === 'admin'
+                      ? '/admin'
+                      : user?.role === 'guide'
+                        ? '/guide'
+                        : '/dashboard'
                   }
                   className="hidden sm:flex items-center gap-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-600 dark:text-blue-400 font-extrabold px-4 py-2 rounded-xl text-xs uppercase tracking-wide transition-all border border-blue-500/10"
                 >

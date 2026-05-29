@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { FiSend, FiMail, FiPhoneCall, FiMapPin, FiClock } from 'react-icons/fi';
 import { motion } from 'framer-motion';
+import { useSelector } from 'react-redux';
 import { useToast } from '../../context/ToastContext';
 
 const Contact = () => {
   const { addToast } = useToast();
+  const { settings } = useSelector((state) => state.settings);
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -51,7 +53,7 @@ const Contact = () => {
 
       <motion.div variants={itemVariants} className="mb-12 text-center md:text-left">
         <h1 className="text-3xl font-black text-slate-900 dark:text-white font-sans tracking-tight">Customer Support</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-bold">Have questions about reserving slots or managing structures? Connect with our team.</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-bold font-sans">Have questions about reserving slots or managing structures? Connect with our team.</p>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -65,7 +67,7 @@ const Contact = () => {
                 </div>
                 <h2 className="text-xl font-black text-slate-800 dark:text-white font-sans tracking-tight">Support Ticket Logged</h2>
                 <p className="mt-4 text-xs text-slate-500 dark:text-slate-400 font-bold leading-relaxed">
-                  Thank you! Your message has been safely logged in our system. A smart parking support officer will contact you at <span className="text-blue-500">{formData.email}</span> shortly.
+                  Thank you! Your message has been safely logged in our system. A support officer will contact you at <span className="text-blue-500">{formData.email}</span> shortly.
                 </p>
                 <button
                   onClick={() => {
@@ -114,7 +116,7 @@ const Contact = () => {
                     onChange={handleChange}
                     required
                     rows={5}
-                    className="w-full glass-input leading-relaxed"
+                    className="w-full glass-input leading-relaxed text-sm font-semibold"
                     placeholder="Describe how we can assist you..."
                   />
                 </div>
@@ -154,7 +156,7 @@ const Contact = () => {
                 </div>
                 <div>
                   <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">Email Support</span>
-                  <span className="text-slate-800 dark:text-white font-bold block mt-1">support@parksmart.com</span>
+                  <span className="text-slate-800 dark:text-white font-bold block mt-1">{settings?.contactEmail || 'support@smartparking.com'}</span>
                 </div>
               </div>
 
@@ -164,7 +166,7 @@ const Contact = () => {
                 </div>
                 <div>
                   <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">Call Support</span>
-                  <span className="text-slate-800 dark:text-white font-bold block mt-1">+91 9876543210</span>
+                  <span className="text-slate-800 dark:text-white font-bold block mt-1">{settings?.contactPhone || '+91 9876543210'}</span>
                 </div>
               </div>
 
@@ -175,7 +177,7 @@ const Contact = () => {
                 <div>
                   <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">Corporate HQ</span>
                   <span className="text-slate-800 dark:text-white font-semibold block mt-1 leading-relaxed">
-                    ParkSmart IoT Tech Park,<br />Highway Junction, Nedumbassery,<br />Kochi, Kerala - 683111
+                    {settings?.supportAddress || 'Smart Parking Corporate HQ Tech Park, Nedumbassery, Kochi - 683111'}
                   </span>
                 </div>
               </div>

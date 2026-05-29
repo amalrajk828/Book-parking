@@ -39,7 +39,7 @@ export const updateSettings = createAsyncThunk(
 
 const initialState = {
   settings: {
-    websiteName: 'ParkSmart',
+    websiteName: 'Smart Parking',
     websiteLogo: '',
     contactEmail: 'amalrajk828@gmail.com',
     contactPhone: '+91 7594005431',

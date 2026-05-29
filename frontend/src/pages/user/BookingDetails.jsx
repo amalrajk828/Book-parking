@@ -39,7 +39,7 @@ const BookingDetails = () => {
     if (!activeBooking?.qrCode) return;
     const link = document.createElement('a');
     link.href = activeBooking.qrCode;
-    link.download = `ParkSmart-Ticket-${activeBooking.bookingId}.png`;
+    link.download = `${settings?.websiteName || 'Smart Parking'}-Ticket-${activeBooking.bookingId}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

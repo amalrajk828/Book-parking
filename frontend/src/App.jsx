@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store/store';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
@@ -46,6 +46,7 @@ import SettingsDashboard from './pages/admin/SettingsDashboard';
 
 const AppContent = () => {
   const dispatch = useDispatch();
+  const location = useLocation();
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const { settings } = useSelector((state) => state.settings);
   const { setThemeMode } = useTheme();
@@ -55,6 +56,39 @@ const AppContent = () => {
   useEffect(() => {
     dispatch(fetchSettings());
   }, [dispatch]);
+
+  // Dynamic Browser Document Title Management
+  useEffect(() => {
+    const siteName = settings?.websiteName || 'Smart Parking';
+    const path = location.pathname;
+
+    let pageTitle = 'Smart Parking';
+    if (path === '/') pageTitle = 'Home';
+    else if (path === '/login') pageTitle = 'Login';
+    else if (path === '/register') pageTitle = 'Register';
+    else if (path === '/forgot-password') pageTitle = 'Forgot Password';
+    else if (path === '/reset-password') pageTitle = 'Reset Password';
+    else if (path === '/about') pageTitle = 'About Us';
+    else if (path === '/contact') pageTitle = 'Customer Support';
+    else if (path === '/explore') pageTitle = 'Explore Structures';
+    else if (path.startsWith('/explore/')) pageTitle = 'Structure Details';
+    else if (path === '/dashboard') pageTitle = 'Driver Dashboard';
+    else if (path === '/my-bookings') pageTitle = 'My Bookings';
+    else if (path.startsWith('/bookings/')) pageTitle = 'Ticket Details';
+    else if (path === '/profile') pageTitle = 'Profile Settings';
+    else if (path === '/guide' || path === '/guide/') pageTitle = 'Guide Dashboard';
+    else if (path === '/guide/scanner') pageTitle = 'Live Ticket Scanner';
+    else if (path === '/admin' || path === '/admin/') pageTitle = 'Admin Dashboard';
+    else if (path === '/admin/areas') pageTitle = 'Manage Areas';
+    else if (path === '/admin/slots') pageTitle = 'Manage Slots';
+    else if (path === '/admin/users') pageTitle = 'Manage Users';
+    else if (path === '/admin/guides') pageTitle = 'Manage Guides';
+    else if (path === '/admin/bookings') pageTitle = 'Manage Bookings';
+    else if (path === '/admin/logs') pageTitle = 'System Audit Logs';
+    else if (path === '/admin/settings') pageTitle = 'Website Configuration';
+
+    document.title = `${pageTitle} | ${siteName}`;
+  }, [location, settings?.websiteName]);
 
   // Synchronize dynamic theme mode configuration
   useEffect(() => {

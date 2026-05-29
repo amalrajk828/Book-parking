@@ -10,6 +10,7 @@ const UserDashboard = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { myBookings, loading } = useSelector((state) => state.bookings);
+  const { settings } = useSelector((state) => state.settings);
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
@@ -20,14 +21,14 @@ const UserDashboard = () => {
       try {
         await api.get('/auth/profile');
         setNotifications([
-          { _id: '1', message: 'Welcome to ParkSmart! Explore active slot grids now.', createdAt: new Date() }
+          { _id: '1', message: `Welcome to ${settings?.websiteName || 'Smart Parking'}! Explore active slot grids now.`, createdAt: new Date() }
         ]);
       } catch (error) {
         console.error('Error fetching notifications:', error);
       }
     };
     getNotifications();
-  }, [dispatch]);
+  }, [dispatch, settings?.websiteName]);
 
   const activeBookings = myBookings.filter(b => b.status === 'confirmed' || b.status === 'checked-in');
 

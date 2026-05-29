@@ -512,7 +512,7 @@ const SettingsDashboard = () => {
                   </div>
                 )}
                 <span className="font-black text-sm tracking-wider uppercase dark:text-white font-sans">
-                  {websiteName || 'PARKSMART'}
+                  {websiteName || 'Smart Parking'}
                 </span>
               </div>
             </div>

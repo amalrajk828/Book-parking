@@ -5,8 +5,7 @@ console.log('[DEBUG] WebsiteConfig model file loaded successfully');
 const websiteConfigSchema = new mongoose.Schema({
   websiteName: {
     type: String,
-    required: true,
-    default: 'ParkSmart'
+    required: true
   },
   websiteLogo: {
     type: String,

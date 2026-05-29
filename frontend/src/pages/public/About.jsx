@@ -1,7 +1,10 @@
 import { FiCpu, FiTrendingUp, FiShield, FiUsers } from 'react-icons/fi';
 import { motion } from 'framer-motion';
+import { useSelector } from 'react-redux';
 
 const About = () => {
+  const { settings } = useSelector((state) => state.settings);
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
@@ -35,7 +38,7 @@ const About = () => {
           </span>
         </h1>
         <p className="mt-6 text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-bold max-w-2xl mx-auto">
-          ParkSmart resolves urban congestion and parking frustrations by connecting smart sensor matrices directly to premium user dashboards. We coordinate gate officers, slot reservations, and automated payments seamlessly.
+          {settings?.websiteName || 'Smart Parking'} resolves urban congestion and parking frustrations by connecting smart sensor matrices directly to premium user dashboards. We coordinate gate officers, slot reservations, and automated payments seamlessly.
         </p>
       </motion.div>
 

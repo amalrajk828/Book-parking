@@ -21,7 +21,7 @@ const sendEmail = async ({ to, subject, html }) => {
   if (transporter) {
     try {
       const info = await transporter.sendMail({
-        from: `"ParkSmart Notification Hub" <${process.env.EMAIL_USER}>`,
+        from: `"Notification Hub" <${process.env.EMAIL_USER}>`,
         to,
         subject,
         html,

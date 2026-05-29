@@ -155,7 +155,7 @@ const ManageGuides = () => {
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Email Address</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="mark@parksmart.com" className="glass-input py-2 text-sm bg-white/20" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="mark@smartparking.com" className="glass-input py-2 text-sm bg-white/20" />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

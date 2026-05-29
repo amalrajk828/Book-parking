@@ -79,7 +79,7 @@ const Home = () => {
           variants={itemVariants}
           className="mt-6 text-base sm:text-lg text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed font-semibold font-sans"
         >
-          Skip the search. ParkSmart connects you to premium parking slots across major cities with live availability, instant booking QR codes, and automatic checkout payments.
+          Skip the search. {settings?.websiteName || 'Smart Parking'} connects you to premium parking slots across major cities with live availability, instant booking QR codes, and automatic checkout payments.
         </motion.p>
 
         {/* CTA Actions */}
@@ -155,10 +155,10 @@ const Home = () => {
                   <img src={settings.websiteLogo} alt={settings.websiteName} className="h-6 object-contain" />
                 ) : (
                   <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-extrabold">
-                    {(settings.websiteName || 'ParkSmart').substring(0, 1).toUpperCase()}
+                    {(settings.websiteName || 'Smart Parking').substring(0, 1).toUpperCase()}
                   </div>
                 )}
-                <span className="font-black text-base uppercase tracking-wider dark:text-white">{settings.websiteName || 'ParkSmart'}</span>
+                <span className="font-black text-base uppercase tracking-wider dark:text-white">{settings.websiteName || 'Smart Parking'}</span>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
                 {settings.footerText || 'Next-generation IoT smart parking reservation and gate checkout platform.'}
@@ -215,7 +215,7 @@ const Home = () => {
 
           {/* Bottom Footer bar */}
           <div className="border-t border-slate-200/10 dark:border-zinc-800/30 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] text-slate-400">
-            <span>&copy; {new Date().getFullYear()} {settings.websiteName || 'ParkSmart'} IoT Systems. All rights reserved.</span>
+            <span>&copy; {new Date().getFullYear()} {settings.websiteName || 'Smart Parking'} IoT Systems. All rights reserved.</span>
             <div className="flex gap-4">
               <a href="#" className="hover:text-blue-500">Privacy Policy</a>
               <a href="#" className="hover:text-blue-500">Terms of Use</a>
