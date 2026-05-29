@@ -108,10 +108,24 @@ const QRScannerPage = () => {
           setHtml5QrCodeInstance(null);
           setPermissionState('idle');
           setIsModalOpen(false);
-          setBookingInput(decodedText);
+
+          // Extract booking ID with backward compatibility support
+          let bookingId = decodedText.trim();
+          if (bookingId.startsWith('{')) {
+            try {
+              const parsed = JSON.parse(bookingId);
+              if (parsed && parsed.bookingId) {
+                bookingId = parsed.bookingId;
+              }
+            } catch (err) {
+              console.error('Failed to parse old QR code JSON:', err);
+            }
+          }
+
+          setBookingInput(bookingId);
           addToast('QR ticket code scanned successfully!', 'success');
           // Retrieve registration parameters
-          triggerVerification(decodedText);
+          triggerVerification(bookingId);
         },
         () => {
           // parse errors are normal and can be ignored
@@ -146,8 +160,22 @@ const QRScannerPage = () => {
     setIsModalOpen(false);
   };
 
-  const triggerVerification = async (bookingId) => {
+  const triggerVerification = async (bookingIdInput) => {
     setSearchError('');
+    
+    // Extract booking ID with backward compatibility support
+    let bookingId = (bookingIdInput || '').trim();
+    if (bookingId.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(bookingId);
+        if (parsed && parsed.bookingId) {
+          bookingId = parsed.bookingId;
+        }
+      } catch (err) {
+        console.error('Failed to parse old QR code JSON:', err);
+      }
+    }
+
     const cleanInput = bookingId.trim().toUpperCase();
 
     if (!cleanInput) {
