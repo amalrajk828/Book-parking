@@ -43,10 +43,10 @@ export const fetchBookingById = createAsyncThunk('bookings/fetchById', async (id
 export const verifyTicketQR = createAsyncThunk('bookings/verifyQR', async (bookingId, { rejectWithValue }) => {
   try {
     const trimmedId = bookingId.trim().toUpperCase();
-    console.log(`[FRONTEND DEBUG] Triggering API GET request for: "/reservations/verify/${trimmedId}"`);
-    const response = await api.get(`/reservations/verify/${trimmedId}`);
+    console.log(`[FRONTEND DEBUG] Triggering API GET request for: "/bookings/qr/${trimmedId}"`);
+    const response = await api.get(`/bookings/qr/${trimmedId}`);
     console.log('[FRONTEND DEBUG] Verification API call success:', response.data);
-    return response.data.reservation;
+    return response.data.booking;
   } catch (error) {
     console.error('[FRONTEND DEBUG] Verification API call failed:', error);
     return rejectWithValue(error.response?.data?.message || 'Ticket verification failed');
@@ -56,7 +56,7 @@ export const verifyTicketQR = createAsyncThunk('bookings/verifyQR', async (booki
 // Guide Check-In confirmation thunk
 export const guideConfirmCheckIn = createAsyncThunk('bookings/checkIn', async (id, { rejectWithValue }) => {
   try {
-    const response = await api.post(`/bookings/${id}/check-in`);
+    const response = await api.patch(`/bookings/${id}/checkin`);
     return response.data.booking;
   } catch (error) {
     return rejectWithValue(error.response?.data?.message || 'Check-in failed');
@@ -66,7 +66,7 @@ export const guideConfirmCheckIn = createAsyncThunk('bookings/checkIn', async (i
 // Guide Check-Out confirmation thunk
 export const guideConfirmCheckOut = createAsyncThunk('bookings/checkOut', async (id, { rejectWithValue }) => {
   try {
-    const response = await api.post(`/bookings/${id}/check-out`);
+    const response = await api.patch(`/bookings/${id}/checkout`);
     return response.data.booking;
   } catch (error) {
     return rejectWithValue(error.response?.data?.message || 'Check-out failed');

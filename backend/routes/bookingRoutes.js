@@ -7,7 +7,10 @@ import {
   confirmCheckIn,
   confirmCheckOut,
   cancelBooking,
-  getBookingsByUser
+  getBookingsByUser,
+  getBookingDetailsByQR,
+  checkInQR,
+  checkOutQR
 } from '../controllers/bookingController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorize } from '../middleware/roleMiddleware.js';
@@ -25,5 +28,10 @@ router.post('/:id/cancel', protect, cancelBooking);
 router.post('/verify-qr', protect, authorize('guide', 'admin'), verifyQR);
 router.post('/:id/check-in', protect, authorize('guide', 'admin'), confirmCheckIn);
 router.post('/:id/check-out', protect, authorize('guide', 'admin'), confirmCheckOut);
+
+// New Live QR Code Camera Scanning endpoints
+router.get('/qr/:bookingId', protect, authorize('guide', 'admin'), getBookingDetailsByQR);
+router.patch('/:id/checkin', protect, authorize('guide', 'admin'), checkInQR);
+router.patch('/:id/checkout', protect, authorize('guide', 'admin'), checkOutQR);
 
 export default router;

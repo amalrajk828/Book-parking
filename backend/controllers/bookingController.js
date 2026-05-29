@@ -605,3 +605,210 @@ export const updateSlotStatusSafely = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Get booking details by QR Code lookup (Booking ID or ObjectId)
+// @route   GET /api/bookings/qr/:bookingId
+// @access  Private (Guide / Admin)
+export const getBookingDetailsByQR = async (req, res, next) => {
+  try {
+    const { bookingId } = req.params;
+
+    if (!bookingId) {
+      return res.status(400).json({ success: false, message: 'Please provide a Booking ID or QR Token.' });
+    }
+
+    const booking = await Booking.findOne({
+      $or: [
+        { bookingId: bookingId.toUpperCase() },
+        { _id: mongoose.isValidObjectId(bookingId) ? bookingId : null }
+      ]
+    })
+    .populate('area')
+    .populate('slot')
+    .populate('user', 'username email phone');
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Ticket not found. Invalid QR code.' });
+    }
+
+    res.status(200).json({
+      success: true,
+      booking
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Confirm QR check-in gate entry
+// @route   PATCH /api/bookings/:id/checkin
+// @access  Private (Guide / Admin)
+export const checkInQR = async (req, res, next) => {
+  try {
+    const isObjectId = mongoose.isValidObjectId(req.params.id);
+    let query = isObjectId ? { _id: req.params.id } : { bookingId: req.params.id.toUpperCase() };
+
+    const booking = await Booking.findOne(query).populate('slot').populate('area');
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+
+    if (booking.status !== 'confirmed') {
+      return res.status(400).json({
+        success: false,
+        message: `Check-in invalid. Booking status is currently '${booking.status}'.`
+      });
+    }
+
+    // Business Logic: Check if reservation expired before arrival
+    const currentTime = new Date();
+    const slot = booking.slot;
+    if (slot && slot.activeTiming && slot.activeTiming.end && currentTime > new Date(slot.activeTiming.end)) {
+      booking.status = 'expired';
+      await booking.save();
+
+      // Free slot
+      slot.status = 'available';
+      slot.bookingDetails = { bookingId: null };
+      slot.activeTiming = { start: null, end: null };
+      slot.vehicleDetails = { type: 'Car', number: '', owner: '' };
+      await slot.save();
+
+      // Sync Counts
+      await syncParkingAreaCounts(slot.area);
+
+      return res.status(400).json({
+        success: false,
+        message: 'Reservation has expired before arrival. Booking is now invalid and slot is freed.',
+        booking
+      });
+    }
+
+    booking.status = 'checked-in';
+    booking.checkedIn = true;
+    booking.checkInTime = new Date();
+    await booking.save();
+
+    // Update slot status
+    if (slot) {
+      slot.status = 'occupied';
+      await slot.save();
+    }
+
+    // Dynamic Counts Sync
+    await syncParkingAreaCounts(booking.area._id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Check-In gate entry successfully confirmed. Slot is now occupied.',
+      booking
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Confirm QR checkout departure entry
+// @route   PATCH /api/bookings/:id/checkout
+// @access  Private (Guide / Admin)
+export const checkOutQR = async (req, res, next) => {
+  try {
+    const isObjectId = mongoose.isValidObjectId(req.params.id);
+    let query = isObjectId ? { _id: req.params.id } : { bookingId: req.params.id.toUpperCase() };
+
+    const booking = await Booking.findOne(query)
+      .populate('slot')
+      .populate('area')
+      .populate('user', 'email');
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+
+    if (booking.status !== 'checked-in') {
+      return res.status(400).json({ success: false, message: 'Check-out invalid. Customer is not currently checked-in.' });
+    }
+
+    if (!booking.checkInTime) {
+      return res.status(400).json({ success: false, message: 'Check-in timestamp is missing. Cannot perform check-out.' });
+    }
+
+    const checkOutTime = new Date();
+    const checkInMs = new Date(booking.checkInTime).getTime();
+    const checkOutMs = checkOutTime.getTime();
+
+    booking.checkOutTime = checkOutTime;
+    booking.status = 'checked-out';
+    booking.checkedOut = true;
+
+    // Calculate billing details (Per-Minute extra charges)
+    const actualDurationMinutes = Math.max(0, Math.round((checkOutMs - checkInMs) / (1000 * 60)));
+    const bookedDurationMinutes = booking.reservedHours * 60;
+    const extraMinutes = Math.max(0, actualDurationMinutes - bookedDurationMinutes);
+
+    const hourlyExtraRate = booking.area.extraFeePerHour || booking.area.feePerHour;
+    const perMinuteCharge = hourlyExtraRate / 60;
+    const rawExtraCharge = extraMinutes * perMinuteCharge;
+    const extraCharge = Math.round(rawExtraCharge);
+
+    const finalAmount = booking.estimatedAmount + extraCharge;
+
+    booking.extraMinutes = extraMinutes;
+    booking.extraCharge = extraCharge;
+    booking.extraCharges = extraCharge; // compatibility
+    booking.finalAmount = finalAmount;
+    booking.actualAmount = finalAmount; // compatibility
+    booking.overtimeStatus = extraCharge > 0 ? 'paid' : 'none';
+
+    await booking.save();
+
+    // Release slot
+    const slot = booking.slot;
+    if (slot) {
+      slot.status = 'available';
+      slot.bookingDetails = { bookingId: null };
+      slot.activeTiming = { start: null, end: null };
+      slot.vehicleDetails = { type: 'Car', number: '', owner: '' };
+      await slot.save();
+    }
+
+    // Dynamic Counts Sync
+    await syncParkingAreaCounts(booking.area._id);
+
+    // If extra charge is due, log transaction
+    if (extraCharge > 0) {
+      const extraTxnId = `TXN-OVER-${Math.floor(10000000 + Math.random() * 90000000)}`;
+      await Payment.create({
+        paymentId: extraTxnId,
+        booking: booking._id,
+        user: booking.user._id,
+        amount: extraCharge,
+        status: 'completed',
+        transactionId: extraTxnId,
+      });
+
+      try {
+        await sendPaymentSuccessEmail(booking.user.email, {
+          bookingId: booking.bookingId,
+          amount: extraCharge,
+          transactionId: extraTxnId,
+        });
+      } catch (emailErr) {
+        // ignore email errors
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Check-out completed and slot released successfully.',
+      bookedDurationMinutes,
+      actualDurationMinutes,
+      extraMinutes,
+      extraCharge,
+      totalAmount: finalAmount,
+      booking,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

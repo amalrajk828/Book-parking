@@ -86,6 +86,14 @@ const bookingSchema = new mongoose.Schema({
     enum: ['pending', 'paid', 'refunded'],
     default: 'pending',
   },
+  checkedIn: {
+    type: Boolean,
+    default: false,
+  },
+  checkedOut: {
+    type: Boolean,
+    default: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

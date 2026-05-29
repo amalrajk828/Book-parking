@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { verifyTicketQR, guideConfirmCheckIn, guideConfirmCheckOut, clearScannedBooking } from '../../features/bookingSlice';
-import { FiGrid, FiSearch, FiClock, FiUser, FiDollarSign, FiAlertTriangle } from 'react-icons/fi';
+import { FiGrid, FiSearch, FiClock, FiUser, FiDollarSign, FiAlertTriangle, FiCamera, FiVideoOff } from 'react-icons/fi';
 import { useToast } from '../../context/ToastContext';
+import { Html5Qrcode } from 'html5-qrcode';
 
 const QRScannerPage = () => {
   const [bookingInput, setBookingInput] = useState('');
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
+  const [cameraActive, setCameraActive] = useState(false);
+  const [html5QrCodeInstance, setHtml5QrCodeInstance] = useState(null);
 
   const dispatch = useDispatch();
   const { addToast } = useToast();
@@ -16,17 +19,72 @@ const QRScannerPage = () => {
   useEffect(() => {
     return () => {
       dispatch(clearScannedBooking());
+      if (html5QrCodeInstance && html5QrCodeInstance.isScanning) {
+        html5QrCodeInstance.stop().catch((err) => console.error('Failed to stop scanner on unmount:', err));
+      }
     };
-  }, [dispatch]);
+  }, [dispatch, html5QrCodeInstance]);
 
-  const handleSearchSubmit = async (e) => {
-    if (e) e.preventDefault();
+  const startScanner = async () => {
     setSearchError('');
-    
-    const cleanInput = bookingInput.trim().toUpperCase();
+    setCameraActive(true);
+    try {
+      // Create reader element instance if not already done
+      const qrCodeScanner = new Html5Qrcode('qr-reader');
+      setHtml5QrCodeInstance(qrCodeScanner);
+
+      const config = {
+        fps: 10,
+        qrbox: (width, height) => {
+          const size = Math.min(width, height) * 0.7;
+          return { width: size, height: size };
+        }
+      };
+
+      await qrCodeScanner.start(
+        { facingMode: 'environment' }, // use rear camera
+        config,
+        async (decodedText) => {
+          // On Success
+          try {
+            await qrCodeScanner.stop();
+          } catch (stopErr) {
+            console.error('Failed to stop camera scanner on scan success:', stopErr);
+          }
+          setCameraActive(false);
+          setBookingInput(decodedText);
+          addToast('QR ticket code scanned successfully!', 'success');
+          // Automatically retrieve reservation details
+          triggerVerification(decodedText);
+        },
+        () => {
+          // parse errors are normal and can be ignored
+        }
+      );
+    } catch (err) {
+      console.error('[SCANNER ERROR] Failed to start html5-qrcode:', err);
+      setSearchError('Camera initialization failed. Please grant camera permission and ensure no other tab is using it.');
+      setCameraActive(false);
+    }
+  };
+
+  const stopScanner = async () => {
+    if (html5QrCodeInstance && html5QrCodeInstance.isScanning) {
+      try {
+        await html5QrCodeInstance.stop();
+      } catch (err) {
+        console.error('Failed to stop camera:', err);
+      }
+    }
+    setCameraActive(false);
+  };
+
+  const triggerVerification = async (bookingId) => {
+    setSearchError('');
+    const cleanInput = bookingId.trim().toUpperCase();
 
     if (!cleanInput) {
-      setSearchError('Please enter a Booking ID');
+      setSearchError('Please scan a valid QR ticket or enter booking code');
       return;
     }
 
@@ -35,18 +93,23 @@ const QRScannerPage = () => {
     setSearching(false);
 
     if (result.meta.requestStatus === 'rejected') {
-      setSearchError(result.payload || 'Reservation not found. Please verify the ID.');
-      addToast(result.payload || 'Reservation not found. Please verify the ID.', 'error');
+      setSearchError(result.payload || 'Ticket verification failed. Booking not found.');
+      addToast(result.payload || 'Ticket verification failed. Booking not found.', 'error');
     } else {
       addToast('Ticket successfully verified!', 'success');
     }
+  };
+
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    triggerVerification(bookingInput);
   };
 
   const handleCheckIn = async () => {
     if (!scannedBooking) return;
     const res = await dispatch(guideConfirmCheckIn(scannedBooking._id));
     if (res.meta.requestStatus === 'fulfilled') {
-      addToast('Check-In gate entry confirmed! Slot is now occupied.', 'success');
+      addToast('Check-In gate entry successfully confirmed! Space is occupied.', 'success');
     } else {
       addToast(res.payload || 'Check-in failed', 'error');
     }
@@ -57,7 +120,7 @@ const QRScannerPage = () => {
     const res = await dispatch(guideConfirmCheckOut(scannedBooking._id));
     if (res.meta.requestStatus === 'fulfilled') {
       const { extraCharges, actualAmount, estimatedAmount } = res.payload || {};
-      addToast(`Check-Out completed! Overtime Fee: ₹${extraCharges || 0}, Total Paid: ₹${actualAmount || estimatedAmount}`, 'success');
+      addToast(`Departure Check-Out completed successfully! Overtime charges: ₹${extraCharges || 0}, Total Amount: ₹${actualAmount || estimatedAmount}`, 'success');
       dispatch(clearScannedBooking());
       setBookingInput('');
     } else {
@@ -100,19 +163,61 @@ const QRScannerPage = () => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2 font-sans tracking-tight">
-          <FiGrid className="text-blue-500" /> Ticket Verification
+          <FiGrid className="text-blue-500" /> Live Ticket Scanner
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Perform high-fidelity lookups by Booking ID to approve gate entrance check-ins and departures
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-bold">
+          Perform high-fidelity ticket validation using real-time camera QR scans or code lookups
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {/* Left Side: Search Dashboard Form */}
+        {/* Left Side: QR Scanner Camera preview section & Manual forms */}
         <div className="lg:col-span-1 flex flex-col gap-6">
+          <div className="glass-card p-6 rounded-2xl border border-slate-200/40 dark:border-zinc-800/40 shadow-sm bg-white dark:bg-zinc-950 flex flex-col gap-4">
+            <h3 className="font-extrabold text-slate-800 dark:text-white text-sm uppercase tracking-wider font-sans">
+              Live Camera Verification
+            </h3>
+            
+            {/* Viewfinder box container */}
+            <div className="relative overflow-hidden aspect-square w-full rounded-2xl border border-slate-200/60 dark:border-zinc-800/60 bg-zinc-950 flex flex-col justify-center items-center shadow-inner text-center">
+              {cameraActive ? (
+                <>
+                  <div id="qr-reader" className="absolute inset-0 w-full h-full object-cover"></div>
+                  {/* Viewfinder scanner HUD overlay */}
+                  <div className="absolute inset-4 border border-dashed border-blue-500/50 rounded-xl pointer-events-none flex items-center justify-center">
+                    <div className="w-48 h-48 border border-dashed border-blue-500 animate-glow rounded-xl"></div>
+                  </div>
+                </>
+              ) : (
+                <div className="p-6 flex flex-col items-center gap-3 text-zinc-500">
+                  <FiCamera size={32} className="text-zinc-600 dark:text-zinc-500 animate-float" />
+                  <p className="text-[11px] leading-relaxed max-w-[200px] text-zinc-400">
+                    Camera is currently offline. Press Start scanning camera to initialize live feed.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {cameraActive ? (
+              <button
+                onClick={stopScanner}
+                className="btn-secondary py-3 text-xs uppercase font-extrabold tracking-wider justify-center w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30"
+              >
+                <FiVideoOff /> Stop Scanning Camera
+              </button>
+            ) : (
+              <button
+                onClick={startScanner}
+                className="btn-primary py-3 text-xs uppercase font-extrabold tracking-wider justify-center w-full"
+              >
+                <FiCamera /> Start Scanning Camera
+              </button>
+            )}
+          </div>
+
           <div className="glass-card p-6 rounded-2xl border border-slate-200/40 dark:border-zinc-800/40 shadow-sm bg-white dark:bg-zinc-950">
             <h3 className="font-extrabold text-slate-800 dark:text-white text-sm uppercase tracking-wider mb-4 font-sans">
-              Inspect Booking ID
+              Manual Ticket Lookup
             </h3>
             
             <form onSubmit={handleSearchSubmit} className="flex flex-col gap-4">
@@ -146,7 +251,7 @@ const QRScannerPage = () => {
                     Searching Database...
                   </>
                 ) : (
-                  <>Verify Reservation</>
+                  <>Verify Reservation Code</>
                 )}
               </button>
             </form>
@@ -176,7 +281,7 @@ const QRScannerPage = () => {
               <div>
                 <h3 className="font-extrabold text-slate-800 dark:text-white text-base">Scanner Standby</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto leading-relaxed">
-                  Enter a valid booking code on the left toolpane to retrieve reservation details, verify slot occupancy, and check billing logs.
+                  Start the rear camera scan above or type a valid booking code to verify ticket arrival times, slot allocations, and customer check-ins.
                 </p>
               </div>
             </div>
@@ -210,7 +315,7 @@ const QRScannerPage = () => {
                   {/* Registration Code */}
                   <div className="flex flex-col gap-0.5">
                     <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Registration Code</span>
-                    <span className="font-extrabold text-slate-800 dark:text-white uppercase tracking-wider mt-0.5">
+                    <span className="font-extrabold text-slate-800 dark:text-white uppercase tracking-wider mt-0.5 font-mono">
                       {scannedBooking.vehicleDetails?.number}
                     </span>
                   </div>
@@ -235,7 +340,7 @@ const QRScannerPage = () => {
                   <div className="flex flex-col gap-0.5">
                     <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Allocated Slot</span>
                     <span className="font-extrabold text-blue-600 dark:text-blue-400 mt-0.5 text-base">
-                      {scannedBooking.slot?.slotId || 'A1'}
+                      {scannedBooking.slot?.slotId || 'N/A'}
                     </span>
                   </div>
 
@@ -243,7 +348,7 @@ const QRScannerPage = () => {
                   <div className="flex flex-col gap-0.5">
                     <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Payment Ledger</span>
                     <span className="font-extrabold text-green-500 mt-0.5 flex items-center gap-1">
-                      <FiDollarSign /> Paid - Gateway completed
+                      <FiDollarSign /> {scannedBooking.paymentStatus?.toUpperCase() || 'PAID'} (₹{scannedBooking.estimatedAmount})
                     </span>
                   </div>
 
@@ -279,18 +384,20 @@ const QRScannerPage = () => {
                 {scannedBooking.status === 'confirmed' && (
                   <button
                     onClick={handleCheckIn}
+                    disabled={loading}
                     className="btn-primary flex-1 py-3 justify-center text-sm font-bold tracking-wide"
                   >
-                    Confirm Check-In Gate Entry
+                    {loading ? 'Confirming check-in...' : 'Confirm Check-In Gate Entry'}
                   </button>
                 )}
 
                 {scannedBooking.status === 'checked-in' && (
                   <button
                     onClick={handleCheckOut}
+                    disabled={loading}
                     className="btn-primary bg-amber-500 hover:bg-amber-600 border-amber-500 flex-1 py-3 justify-center text-sm font-bold tracking-wide"
                   >
-                    Confirm Departure Checkout
+                    {loading ? 'Confirming check-out...' : 'Confirm Departure Checkout'}
                   </button>
                 )}
 
