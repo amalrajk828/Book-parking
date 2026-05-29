@@ -18,6 +18,7 @@ import parkingSlotRoutes from './routes/parkingSlotRoutes.js';
 import configRoutes from './routes/configRoutes.js';
 
 dotenv.config();
+console.log('NEW DEPLOY ACTIVE');
 
 /* =========================
    SECURITY CHECKS
@@ -115,7 +116,9 @@ app.use('/api/config', configRoutes);
 console.log('[DEBUG] Config routes loaded successfully');
 app.use('/api/admin', adminRoutes);
 app.use('/api/reservations', reservationRoutes);
+console.log('[DEBUG] Loading slot routes...');
 app.use('/api/slots', parkingSlotRoutes);
+console.log('[DEBUG] Slot routes loaded successfully');
 
 /* =========================
    ROOT
