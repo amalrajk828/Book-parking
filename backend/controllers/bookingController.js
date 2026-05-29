@@ -41,15 +41,7 @@ export const createBooking = async (req, res, next) => {
     endTime.setHours(startTime.getHours() + Number(reservedHours));
 
     // Generate high-fidelity QR Code content
-    const qrData = JSON.stringify({
-      bookingId: bookingUniqueId,
-      userId: req.user._id,
-      slotId: slot.slotId,
-      areaId: area.areaId,
-      reservedHours,
-      estimatedAmount,
-      status: 'confirmed'
-    });
+    const qrData = bookingUniqueId;
     
     const qrCodeBase64 = await generateQR(qrData);
 
@@ -748,6 +740,35 @@ export const checkOutQR = async (req, res, next) => {
       extraCharge,
       totalAmount: finalAmount,
       booking,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Lookup booking by bookingId
+// @route   GET /api/bookings/lookup/:bookingId
+// @access  Private
+export const lookupBooking = async (req, res, next) => {
+  try {
+    const { bookingId } = req.params;
+
+    if (!bookingId) {
+      return res.status(400).json({ success: false, message: 'Please provide a Booking ID.' });
+    }
+
+    const booking = await Booking.findOne({ bookingId: bookingId.toUpperCase() })
+      .populate('area')
+      .populate('slot')
+      .populate('user', 'username email phone');
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found.' });
+    }
+
+    res.status(200).json({
+      success: true,
+      booking
     });
   } catch (error) {
     next(error);

@@ -43,8 +43,8 @@ export const fetchBookingById = createAsyncThunk('bookings/fetchById', async (id
 export const verifyTicketQR = createAsyncThunk('bookings/verifyQR', async (bookingId, { rejectWithValue }) => {
   try {
     const trimmedId = bookingId.trim().toUpperCase();
-    console.log(`[FRONTEND DEBUG] Triggering API GET request for: "/bookings/qr/${trimmedId}"`);
-    const response = await api.get(`/bookings/qr/${trimmedId}`);
+    console.log(`[FRONTEND DEBUG] Triggering API GET request for: "/bookings/lookup/${trimmedId}"`);
+    const response = await api.get(`/bookings/lookup/${trimmedId}`);
     console.log('[FRONTEND DEBUG] Verification API call success:', response.data);
     return response.data.booking;
   } catch (error) {

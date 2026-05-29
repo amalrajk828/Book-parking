@@ -10,7 +10,8 @@ import {
   getBookingsByUser,
   getBookingDetailsByQR,
   checkInQR,
-  checkOutQR
+  checkOutQR,
+  lookupBooking
 } from '../controllers/bookingController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorize } from '../middleware/roleMiddleware.js';
@@ -21,6 +22,7 @@ const router = express.Router();
 router.post('/', protect, createBooking);
 router.get('/my-bookings', protect, getUserBookings);
 router.get('/user/:userId', protect, getBookingsByUser);
+router.get('/lookup/:bookingId', protect, lookupBooking);
 router.get('/:id', protect, getBookingById);
 router.post('/:id/cancel', protect, cancelBooking);
 
