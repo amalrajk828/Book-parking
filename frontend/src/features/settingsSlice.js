@@ -37,28 +37,41 @@ export const updateSettings = createAsyncThunk(
   }
 );
 
+const cachedSettings = localStorage.getItem('website_settings');
+let parsedSettings = null;
+if (cachedSettings) {
+  try {
+    parsedSettings = JSON.parse(cachedSettings);
+  } catch (err) {
+    console.error('Failed to parse cached website settings:', err);
+  }
+}
+
+const defaultSettings = {
+  websiteName: 'Smart Parking',
+  websiteLogo: '',
+  contactEmail: 'amalrajk828@gmail.com',
+  contactPhone: '+91 7594005431',
+  supportAddress: '123 Smart Way, Tech City',
+  currency: 'INR',
+  currencySymbol: '₹',
+  themeMode: 'system',
+  primaryColor: '#3b82f6',
+  maintenanceMode: false,
+  maintenanceMessage: 'System under maintenance. We will be back shortly.',
+  footerText: 'Next-generation IoT smart parking reservation and gate checkout platform.',
+  socialLinks: {
+    facebook: '',
+    instagram: '',
+    twitter: '',
+    linkedin: ''
+  }
+};
+
 const initialState = {
-  settings: {
-    websiteName: 'Smart Parking',
-    websiteLogo: '',
-    contactEmail: 'amalrajk828@gmail.com',
-    contactPhone: '+91 7594005431',
-    supportAddress: '123 Smart Way, Tech City',
-    currency: 'INR',
-    currencySymbol: '₹',
-    themeMode: 'system',
-    primaryColor: '#3b82f6',
-    maintenanceMode: false,
-    maintenanceMessage: 'System under maintenance. We will be back shortly.',
-    footerText: 'Next-generation IoT smart parking reservation and gate checkout platform.',
-    socialLinks: {
-      facebook: '',
-      instagram: '',
-      twitter: '',
-      linkedin: ''
-    }
-  },
+  settings: parsedSettings || defaultSettings,
   loading: false,
+  initialized: parsedSettings ? true : false,
   error: null,
 };
 
@@ -79,11 +92,15 @@ const settingsSlice = createSlice({
       })
       .addCase(fetchSettings.fulfilled, (state, action) => {
         state.loading = false;
+        state.initialized = true;
         state.settings = action.payload;
+        localStorage.setItem('website_settings', JSON.stringify(action.payload));
       })
       .addCase(fetchSettings.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        // If fetch fails, keep initialized true to still display cached layout
+        state.initialized = true;
       })
       // Update settings
       .addCase(updateSettings.pending, (state) => {
@@ -93,6 +110,7 @@ const settingsSlice = createSlice({
       .addCase(updateSettings.fulfilled, (state, action) => {
         state.loading = false;
         state.settings = action.payload;
+        localStorage.setItem('website_settings', JSON.stringify(action.payload));
       })
       .addCase(updateSettings.rejected, (state, action) => {
         state.loading = false;

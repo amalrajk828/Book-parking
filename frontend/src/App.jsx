@@ -48,7 +48,7 @@ const AppContent = () => {
   const dispatch = useDispatch();
   const location = useLocation();
   const { isAuthenticated, user } = useSelector((state) => state.auth);
-  const { settings } = useSelector((state) => state.settings);
+  const { settings, initialized } = useSelector((state) => state.settings);
   const { setThemeMode } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -168,6 +168,25 @@ const AppContent = () => {
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
+
+  // Application initialization loading gate
+  if (!initialized) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-zinc-950 font-sans transition-colors duration-300">
+        <div className="flex flex-col items-center gap-4 text-center">
+          {/* Premium pulsing and spinning loading ring */}
+          <div className="relative w-16 h-16">
+            <div className="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-zinc-800"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-t-blue-500 animate-spin"></div>
+          </div>
+          <div className="mt-2 flex flex-col gap-1">
+            <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight">Initializing Platform</h3>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Syncing configurations...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Maintenance Mode Gate Interceptor
   const isMaintenanceActive = settings?.maintenanceMode && user?.role !== 'admin';
