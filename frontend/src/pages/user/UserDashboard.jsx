@@ -20,8 +20,7 @@ const UserDashboard = () => {
       try {
         await api.get('/auth/profile');
         setNotifications([
-          { _id: '1', message: 'Welcome to ParkSmart! Explore active slot grids now.', createdAt: new Date() },
-          { _id: '2', message: 'First-time registry promo: Simulated payments enabled out-of-the-box.', createdAt: new Date() }
+          { _id: '1', message: 'Welcome to ParkSmart! Explore active slot grids now.', createdAt: new Date() }
         ]);
       } catch (error) {
         console.error('Error fetching notifications:', error);
@@ -142,33 +141,48 @@ const UserDashboard = () => {
                     key={b._id} 
                     variants={itemVariants}
                     whileHover={{ scale: 1.005 }}
-                    className="premium-card p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-zinc-950 font-semibold"
+                    className="premium-card p-6 flex flex-col justify-between items-start gap-4 bg-white dark:bg-zinc-950 font-semibold"
                   >
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center gap-2.5">
-                        <span className={`text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider ${statusBadgeStyle}`}>
-                          {b.status}
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wide">{b.bookingId}</span>
+                    <div className="flex flex-col sm:flex-row gap-4 items-center w-full justify-between font-semibold">
+                      <div className="flex flex-col gap-1.5 flex-grow">
+                        <div className="flex items-center gap-2.5">
+                          <span className={`text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider ${statusBadgeStyle}`}>
+                            {b.status}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wide">{b.bookingId}</span>
+                        </div>
+                        
+                        <h3 className="font-extrabold text-base text-slate-800 dark:text-white mt-1.5 font-sans">
+                          {b.area?.name || 'Smart Parking Lot'}
+                        </h3>
+                        
+                        <div className="text-xs text-slate-400 font-bold flex flex-wrap items-center gap-3 mt-1 uppercase tracking-wide">
+                          <span className="flex items-center gap-1"><FiMapPin className="text-blue-500" /> Space: <span className="text-slate-700 dark:text-slate-300 font-extrabold">{b.slot?.slotId || 'A1'}</span></span>
+                          <span>•</span>
+                          <span>Plate: <span className="text-slate-700 dark:text-slate-300 font-extrabold">{b.vehicleDetails?.number}</span></span>
+                        </div>
                       </div>
-                      
-                      <h3 className="font-extrabold text-base text-slate-800 dark:text-white mt-1.5 font-sans">
-                        {b.area?.name || 'Smart Parking Lot'}
-                      </h3>
-                      
-                      <div className="text-xs text-slate-400 font-bold flex flex-wrap items-center gap-3 mt-1 uppercase tracking-wide">
-                        <span className="flex items-center gap-1"><FiMapPin className="text-blue-500" /> Space: <span className="text-slate-700 dark:text-slate-300 font-extrabold">{b.slot?.slotId || 'A1'}</span></span>
-                        <span>•</span>
-                        <span>Plate: <span className="text-slate-700 dark:text-slate-300 font-extrabold">{b.vehicleDetails?.number}</span></span>
+
+                      {/* Small scannable QR Code inline */}
+                      {b.qrCode && (
+                        <div className="shrink-0 p-1.5 border border-slate-200/60 dark:border-zinc-800/80 rounded-xl bg-white shadow-sm flex items-center justify-center">
+                          <img 
+                            src={b.qrCode} 
+                            alt="Scan QR" 
+                            className="w-16 h-16 rounded-lg bg-white" 
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex flex-col gap-2 shrink-0 w-full sm:w-auto">
+                        <Link 
+                          to={`/bookings/${b._id}`} 
+                          className="btn-primary py-2 px-5 text-xs font-extrabold uppercase tracking-wider text-center shadow-md animate-pulse"
+                        >
+                          View QR Ticket
+                        </Link>
                       </div>
                     </div>
-
-                    <Link 
-                      to={`/bookings/${b._id}`} 
-                      className="btn-primary py-2 px-5 text-xs font-extrabold uppercase tracking-wider self-start sm:self-auto shadow-md"
-                    >
-                      View QR Ticket
-                    </Link>
                   </motion.div>
                 );
               })}

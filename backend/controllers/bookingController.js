@@ -3,10 +3,9 @@ import GuideActivityLog from '../models/GuideActivityLog.js';
 import mongoose from 'mongoose';
 import ParkingArea from '../models/ParkingArea.js';
 import ParkingSlot from '../models/ParkingSlot.js';
-import Payment from '../models/Payment.js';
 import Notification from '../models/Notification.js';
 import { generateQR } from '../utils/qrGenerator.js';
-import { sendBookingConfirmationEmail, sendExpiryAlertEmail, sendPaymentSuccessEmail } from '../utils/emailService.js';
+import { sendBookingConfirmationEmail, sendExpiryAlertEmail } from '../utils/emailService.js';
 
 // @desc    Create a new booking (reserve slot & process payment)
 // @route   POST /api/bookings
@@ -80,17 +79,6 @@ export const createBooking = async (req, res, next) => {
     };
     await slot.save();
 
-    // Create Payment log
-    const paymentUniqueId = `TXN-${Math.floor(10000000 + Math.random() * 90000000)}`;
-    await Payment.create({
-      paymentId: paymentUniqueId,
-      booking: booking._id,
-      user: req.user._id,
-      amount: estimatedAmount,
-      status: 'completed',
-      transactionId: paymentUniqueId,
-    });
-
     // Update Area slots count
     area.availableSlots = Math.max(0, area.availableSlots - 1);
     await area.save();
@@ -108,11 +96,6 @@ export const createBooking = async (req, res, next) => {
         bookingId: bookingUniqueId,
         slotId: slot.slotId,
         estimatedAmount,
-      });
-      await sendPaymentSuccessEmail(req.user.email, {
-        bookingId: bookingUniqueId,
-        amount: estimatedAmount,
-        transactionId: paymentUniqueId,
       });
     } catch (emailErr) {
       console.log('Nodemailer alert: email sending failed, logged to console.');
@@ -326,28 +309,7 @@ export const confirmCheckOut = async (req, res, next) => {
     area.occupiedSlots = Math.max(0, area.occupiedSlots - 1);
     await area.save();
 
-    // If extra charge is due, log transaction
-    if (extraCharge > 0) {
-      const extraTxnId = `TXN-OVER-${Math.floor(10000000 + Math.random() * 90000000)}`;
-      await Payment.create({
-        paymentId: extraTxnId,
-        booking: booking._id,
-        user: booking.user._id,
-        amount: extraCharge,
-        status: 'completed',
-        transactionId: extraTxnId,
-      });
-
-      try {
-        await sendPaymentSuccessEmail(booking.user.email, {
-          bookingId: booking.bookingId,
-          amount: extraCharge,
-          transactionId: extraTxnId,
-        });
-      } catch (emailErr) {
-        // ignore email errors
-      }
-    }
+    // No transaction created since payment is offline/manual
 
     res.status(200).json({
       success: true,
@@ -775,28 +737,7 @@ export const checkOutQR = async (req, res, next) => {
     // Dynamic Counts Sync
     await syncParkingAreaCounts(booking.area._id);
 
-    // If extra charge is due, log transaction
-    if (extraCharge > 0) {
-      const extraTxnId = `TXN-OVER-${Math.floor(10000000 + Math.random() * 90000000)}`;
-      await Payment.create({
-        paymentId: extraTxnId,
-        booking: booking._id,
-        user: booking.user._id,
-        amount: extraCharge,
-        status: 'completed',
-        transactionId: extraTxnId,
-      });
-
-      try {
-        await sendPaymentSuccessEmail(booking.user.email, {
-          bookingId: booking.bookingId,
-          amount: extraCharge,
-          transactionId: extraTxnId,
-        });
-      } catch (emailErr) {
-        // ignore email errors
-      }
-    }
+    // No transaction created since payment is offline/manual
 
     res.status(200).json({
       success: true,

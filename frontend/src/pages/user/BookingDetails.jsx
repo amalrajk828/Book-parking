@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchBookingById, userCancelBooking, clearActiveBooking } from '../../features/bookingSlice';
-import { FiArrowLeft, FiDownload, FiCheckCircle, FiInfo, FiAlertTriangle, FiClock } from 'react-icons/fi';
+import { FiArrowLeft, FiDownload, FiCheckCircle, FiInfo, FiAlertTriangle, FiClock, FiPrinter } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { useToast } from '../../context/ToastContext';
 
@@ -138,7 +138,7 @@ const BookingDetails = () => {
     >
       <div className="absolute top-1/4 left-1/4 w-80 h-80 rounded-full bg-blue-500/5 blur-3xl pointer-events-none animate-float" />
 
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} className="print:hidden">
         <Link to="/my-bookings" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-slate-800 dark:hover:text-white mb-8 transition-colors">
           <FiArrowLeft /> Back to Bookings
         </Link>
@@ -174,18 +174,24 @@ const BookingDetails = () => {
             </div>
 
             {/* Actions Button */}
-            <div className="p-6 w-full flex flex-col gap-3 bg-slate-50/20 dark:bg-zinc-900/10">
+            <div className="p-6 w-full flex flex-col gap-3 bg-slate-50/20 dark:bg-zinc-900/10 print:hidden">
               <button 
                 onClick={handleDownloadTicket}
-                className="btn-primary w-full py-3 text-xs uppercase tracking-wider font-extrabold justify-center"
+                className="btn-primary w-full py-3 text-xs uppercase tracking-wider font-extrabold justify-center flex items-center gap-1.5"
               >
                 <FiDownload /> Download Pass PNG
+              </button>
+              <button 
+                onClick={() => window.print()}
+                className="btn-secondary w-full py-3 text-xs uppercase tracking-wider font-extrabold justify-center flex items-center gap-1.5"
+              >
+                <FiPrinter /> Print Booking Receipt
               </button>
               {(activeBooking.status === 'confirmed' || activeBooking.status === 'pending') && (
                 <button 
                   onClick={handleCancel}
                   disabled={isCancelling}
-                  className="btn-outline w-full py-3 text-xs uppercase tracking-wider font-extrabold justify-center border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors"
+                  className="btn-outline w-full py-3 text-xs uppercase tracking-wider font-extrabold justify-center border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-1.5"
                 >
                   Cancel Reservation
                 </button>

@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAreaDetails, clearSelectedArea } from '../../features/parkingSlice';
 import { createNewBooking } from '../../features/bookingSlice';
-import { FiMapPin, FiUser, FiInfo, FiChevronRight, FiCreditCard } from 'react-icons/fi';
+import { FiMapPin, FiUser, FiInfo, FiChevronRight } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { useToast } from '../../context/ToastContext';
 
@@ -21,13 +21,7 @@ const AreaDetails = () => {
   const [vehicleNumber, setVehicleNumber] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [hours, setHours] = useState(1);
-  
-  // Payment Simulator states
-  const [showPayment, setShowPayment] = useState(false);
-  const [cardNumber, setCardNumber] = useState('4242 •••• •••• 4242');
-  const [cardExpiry, setCardExpiry] = useState('12/28');
-  const [cardCvc, setCardCvc] = useState('123');
-  const [isPaying, setIsPaying] = useState(false);
+  const [isBooking, setIsBooking] = useState(false);
 
   useEffect(() => {
     dispatch(fetchAreaDetails(id));
@@ -39,46 +33,41 @@ const AreaDetails = () => {
   const handleSelectSlot = (slot) => {
     if (slot.status !== 'available') return;
     setSelectedSlot(slot);
-    setShowPayment(false); // reset payment view
   };
 
-  const handleProceedToPayment = (e) => {
+  const handleConfirmBooking = async (e) => {
     e.preventDefault();
     if (!isAuthenticated) {
       navigate('/login');
       return;
     }
     if (!selectedSlot || !vehicleNumber || !ownerName) return;
-    setShowPayment(true);
-  };
 
-  const handlePayAndBook = async () => {
-    setIsPaying(true);
-    // Simulate API Network Delay
-    setTimeout(async () => {
-      try {
-        const bookingData = {
-          areaId: selectedArea._id,
-          slotId: selectedSlot._id,
-          vehicleDetails: {
-            type: vehicleType,
-            number: vehicleNumber.toUpperCase(),
-            owner: ownerName
-          },
-          reservedHours: Number(hours)
-        };
-        const result = await dispatch(createNewBooking(bookingData));
-        if (result.meta.requestStatus === 'fulfilled') {
-          addToast('Booking created successfully!', 'success');
-          navigate(`/bookings/${result.payload._id}`);
-        } else {
-          addToast(result.payload || 'Booking failed', 'error');
-        }
-      } catch (err) {
-        console.error(err);
+    setIsBooking(true);
+    try {
+      const bookingData = {
+        areaId: selectedArea._id,
+        slotId: selectedSlot._id,
+        vehicleDetails: {
+          type: vehicleType,
+          number: vehicleNumber.toUpperCase(),
+          owner: ownerName
+        },
+        reservedHours: Number(hours)
+      };
+      
+      const result = await dispatch(createNewBooking(bookingData));
+      if (result.meta.requestStatus === 'fulfilled') {
+        addToast('Booking created successfully!', 'success');
+        navigate(`/bookings/${result.payload._id}`);
+      } else {
+        addToast(result.payload || 'Booking failed', 'error');
       }
-      setIsPaying(false);
-    }, 1500);
+    } catch (err) {
+      console.error(err);
+      addToast('An error occurred during booking. Please try again.', 'error');
+    }
+    setIsBooking(false);
   };
 
   if (loading || !selectedArea) {
@@ -153,7 +142,7 @@ const AreaDetails = () => {
             </div>
           </motion.div>
 
-          {/* Interactive Visual Slot Matrix Grid */}
+          {/* Interactive Visual Slot Grid Map */}
           <motion.div 
             variants={itemVariants} 
             className="premium-card p-6 rounded-3xl bg-white dark:bg-zinc-950/80"
@@ -219,7 +208,7 @@ const AreaDetails = () => {
           </motion.div>
         </div>
 
-        {/* Right 1 Column: Reservation Details Panel / Payment Simulator */}
+        {/* Right 1 Column: Reservation Details Panel */}
         <div className="lg:col-span-1">
           <motion.div 
             variants={itemVariants} 
@@ -230,122 +219,9 @@ const AreaDetails = () => {
                 <FiInfo className="mx-auto mb-3 text-blue-500 animate-float" size={30} />
                 <span>Select an available slot on the left layout grid map to proceed with your booking.</span>
               </div>
-            ) : showPayment ? (
-              /* Payment Slide-in / High-Fidelity Simulator View */
-              <div className="flex flex-col gap-6">
-                <div>
-                  <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-wider font-sans flex items-center gap-2">
-                    <FiCreditCard className="text-blue-500" />
-                    Payment Checkout
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-1 font-bold">Stripe simulated payment gateway</p>
-                </div>
-
-                {/* Simulated Realistic Physical Card Vector Card */}
-                <div className="w-full h-44 rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-950 to-zinc-950 p-5 text-white flex flex-col justify-between shadow-lg relative overflow-hidden border border-white/5">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-2xl pointer-events-none" />
-                  <div className="flex justify-between items-start">
-                    {/* Golden Chip */}
-                    <div className="h-9 w-12 rounded-md bg-gradient-to-br from-amber-300 to-yellow-600 border border-yellow-700/30 flex items-center justify-center opacity-90 shadow-sm" />
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-400">Visa Debit</span>
-                  </div>
-                  
-                  {/* Card number display */}
-                  <div className="text-base font-bold tracking-widest font-mono text-center my-2 text-slate-100">
-                    {cardNumber}
-                  </div>
-
-                  <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">
-                    <div className="flex flex-col gap-0.5 max-w-[150px] truncate">
-                      <span>Cardholder</span>
-                      <span className="text-white font-bold tracking-wide truncate">{ownerName || 'Amal Raj'}</span>
-                    </div>
-                    <div className="flex flex-col gap-0.5 text-right font-mono">
-                      <span>Expires</span>
-                      <span className="text-white font-bold">{cardExpiry}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Invoice calculations summary block */}
-                <div className="flex flex-col gap-3.5 bg-slate-100/30 dark:bg-zinc-900/20 border border-slate-200/20 dark:border-zinc-900/40 p-4 rounded-2xl text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Structure ID</span>
-                    <span className="font-extrabold dark:text-white uppercase">{selectedArea.areaId}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Allocated Space</span>
-                    <span className="font-extrabold text-blue-500 uppercase">{selectedSlot.slotId}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Stay Duration</span>
-                    <span className="font-extrabold dark:text-white">{hours} Hours</span>
-                  </div>
-                  <div className="flex justify-between items-center border-t border-slate-200/10 dark:border-zinc-900/30 pt-3 text-xs font-extrabold uppercase mt-1">
-                    <span className="text-slate-400">Grand Total Paid</span>
-                    <span className="text-base text-blue-600 dark:text-blue-400">{settings?.currencySymbol || '₹'}{estimatedCost}</span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-4 text-xs font-bold text-slate-500 dark:text-slate-400">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="uppercase">Credit Card Number</label>
-                    <input
-                      type="text"
-                      value={cardNumber}
-                      onChange={(e) => setCardNumber(e.target.value)}
-                      className="glass-input py-2 text-sm bg-slate-50 dark:bg-zinc-900/30"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="uppercase">Expiration</label>
-                      <input
-                        type="text"
-                        value={cardExpiry}
-                        onChange={(e) => setCardExpiry(e.target.value)}
-                        className="glass-input py-2 text-sm text-center bg-slate-50 dark:bg-zinc-900/30 font-mono"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="uppercase">CVC PIN</label>
-                      <input
-                        type="password"
-                        value={cardCvc}
-                        onChange={(e) => setCardCvc(e.target.value)}
-                        className="glass-input py-2 text-sm text-center bg-slate-50 dark:bg-zinc-900/30 font-mono"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2.5 mt-2">
-                  <button
-                    onClick={handlePayAndBook}
-                    disabled={isPaying}
-                    className="btn-primary w-full py-3 text-xs uppercase tracking-wider font-extrabold flex items-center justify-center gap-2"
-                  >
-                    {isPaying ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-t-transparent border-white" />
-                        Authorizing stay payment...
-                      </>
-                    ) : (
-                      <>Simulate Secure Booking</>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setShowPayment(false)}
-                    disabled={isPaying}
-                    className="btn-secondary w-full py-2.5 text-xs font-bold uppercase tracking-wider justify-center"
-                  >
-                    Go Back
-                  </button>
-                </div>
-              </div>
             ) : (
               /* Standard Booking Details Form */
-              <form onSubmit={handleProceedToPayment} className="flex flex-col gap-5 text-slate-500 dark:text-slate-400">
+              <form onSubmit={handleConfirmBooking} className="flex flex-col gap-5 text-slate-500 dark:text-slate-400">
                 <div>
                   <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-wider font-sans">Reservation Summary</h3>
                   <p className="text-xs text-slate-400 mt-1 font-bold">Review fees and enter vehicle details</p>
@@ -374,7 +250,7 @@ const AreaDetails = () => {
                       value={ownerName}
                       onChange={(e) => setOwnerName(e.target.value)}
                       required
-                      className="w-full pl-11 glass-input"
+                      className="w-full pl-11 glass-input text-sm"
                       placeholder="Amal Raj"
                     />
                   </div>
@@ -412,7 +288,7 @@ const AreaDetails = () => {
                   <select
                     value={hours}
                     onChange={(e) => setHours(e.target.value)}
-                    className="w-full glass-input font-bold text-blue-500"
+                    className="w-full glass-input font-bold text-blue-500 text-sm"
                   >
                     {[1, 2, 3, 4, 5, 6, 8, 12, 24].map((h) => (
                       <option key={h} value={h}>{h} {h === 1 ? 'Hour' : 'Hours'}</option>
@@ -427,9 +303,17 @@ const AreaDetails = () => {
 
                 <button
                   type="submit"
-                  className="btn-primary w-full py-3.5 mt-2 text-xs uppercase tracking-wider font-extrabold shadow-md"
+                  disabled={isBooking}
+                  className="btn-primary w-full py-3.5 mt-2 text-xs uppercase tracking-wider font-extrabold shadow-md flex items-center justify-center gap-2"
                 >
-                  Proceed to Payment
+                  {isBooking ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-t-transparent border-white" />
+                      Creating your reservation...
+                    </>
+                  ) : (
+                    <>Confirm Booking</>
+                  )}
                 </button>
               </form>
             )}

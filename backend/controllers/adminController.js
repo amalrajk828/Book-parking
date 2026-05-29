@@ -2,7 +2,6 @@ import User from '../models/User.js';
 import Booking from '../models/Booking.js';
 import ParkingArea from '../models/ParkingArea.js';
 import ParkingSlot from '../models/ParkingSlot.js';
-import Payment from '../models/Payment.js';
 import AdminActivityLog from '../models/AdminActivityLog.js';
 
 // @desc    Get dashboard metrics & chart records
