@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store/store';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
@@ -174,21 +174,18 @@ const AppContent = () => {
 
   if (isMaintenanceActive) {
     return (
-      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <div className="min-h-screen transition-colors duration-300 dark:bg-zinc-950">
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="*" element={<Maintenance />} />
-          </Routes>
-        </div>
-      </Router>
+      <div className="min-h-screen transition-colors duration-300 dark:bg-zinc-950">
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="*" element={<Maintenance />} />
+        </Routes>
+      </div>
     );
   }
 
   return (
-    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <div className="min-h-screen flex flex-col transition-colors duration-300 dark:bg-zinc-950">
-        <Navbar toggleSidebar={toggleSidebar} />
+    <div className="min-h-screen flex flex-col transition-colors duration-300 dark:bg-zinc-950">
+      <Navbar toggleSidebar={toggleSidebar} />
         
         <div className="flex flex-1 relative">
           {/* Main Sidebar (only visible when logged in) */}
@@ -241,16 +238,62 @@ const AppContent = () => {
           </main>
         </div>
       </div>
-    </Router>
   );
 };
+
+// ErrorBoundary class component for runtime stability
+import React from 'react';
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('[ErrorBoundary caught error]', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-zinc-950 p-6 text-center font-sans">
+          <div className="max-w-md w-full glass-card p-8 rounded-3xl border border-slate-200/40 dark:border-zinc-800/40 shadow-2xl bg-white dark:bg-zinc-950 flex flex-col items-center gap-4">
+            <div className="p-4 bg-red-500/10 rounded-full text-red-500">
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight text-center">Application Lock</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-bold leading-relaxed text-center font-bold">
+              A runtime rendering collision has occurred. Please refresh the page or return home.
+            </p>
+            <button
+              onClick={() => window.location.href = '/'}
+              className="btn-primary mt-2 py-2.5 px-6 text-xs uppercase tracking-wider font-extrabold shadow-md mx-auto"
+            >
+              Return Home
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 const App = () => {
   return (
     <Provider store={store}>
       <ThemeProvider>
         <ToastProvider>
-          <AppContent />
+          <ErrorBoundary>
+            <AppContent />
+          </ErrorBoundary>
         </ToastProvider>
       </ThemeProvider>
     </Provider>
