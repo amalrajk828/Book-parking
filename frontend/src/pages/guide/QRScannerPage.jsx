@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { verifyTicketQR, guideConfirmCheckIn, guideConfirmCheckOut, clearScannedBooking } from '../../features/bookingSlice';
-import { FiGrid, FiSearch, FiClock, FiUser, FiDollarSign, FiAlertTriangle, FiCamera, FiVideoOff } from 'react-icons/fi';
+import { FiGrid, FiSearch, FiClock, FiUser, FiDollarSign, FiAlertTriangle, FiCamera, FiX, FiRefreshCw, FiCameraOff } from 'react-icons/fi';
 import { useToast } from '../../context/ToastContext';
 import { Html5Qrcode } from 'html5-qrcode';
 
@@ -9,27 +9,81 @@ const QRScannerPage = () => {
   const [bookingInput, setBookingInput] = useState('');
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
-  const [cameraActive, setCameraActive] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [permissionState, setPermissionState] = useState('idle'); // 'idle' | 'requesting' | 'granted' | 'denied' | 'no-device' | 'in-use' | 'error'
+  const [cameraErrorMessage, setCameraErrorMessage] = useState('');
   const [html5QrCodeInstance, setHtml5QrCodeInstance] = useState(null);
 
   const dispatch = useDispatch();
   const { addToast } = useToast();
   const { scannedBooking, loading } = useSelector((state) => state.bookings);
 
+  // Unmount cleanup hook to release browser media camera locks
   useEffect(() => {
     return () => {
       dispatch(clearScannedBooking());
-      if (html5QrCodeInstance && html5QrCodeInstance.isScanning) {
-        html5QrCodeInstance.stop().catch((err) => console.error('Failed to stop scanner on unmount:', err));
+      if (html5QrCodeInstance) {
+        if (html5QrCodeInstance.isScanning) {
+          html5QrCodeInstance.stop().catch((err) => console.error('Failed to stop scanner on unmount:', err));
+        }
       }
     };
   }, [dispatch, html5QrCodeInstance]);
 
-  const startScanner = async () => {
-    setSearchError('');
-    setCameraActive(true);
+  // Request browser media permission explicitly and initialize video scanning viewport
+  const openScanner = async () => {
+    setIsModalOpen(true);
+    setPermissionState('requesting');
+    setCameraErrorMessage('');
+
     try {
-      // Create reader element instance if not already done
+      // Validate browser Media Devices API presence
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Media Devices API is not supported in this browser. Ensure HTTPS is used.');
+      }
+
+      // Explicitly trigger the browser's permission prompt using getUserMedia
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      });
+
+      // Stop stream tracks immediately to release the media lock so html5-qrcode can capture the device
+      stream.getTracks().forEach(track => track.stop());
+
+      setPermissionState('granted');
+      
+      // Delay briefly to allow the DOM 'qr-reader' div to mount before html5-qrcode initializations
+      setTimeout(() => {
+        startScanner();
+      }, 150);
+
+    } catch (err) {
+      console.error('[CAMERA ACCESS EXCEPTION]:', err);
+      const errName = err.name || '';
+      const errMsg = err.message || '';
+
+      if (errName === 'NotAllowedError' || errName === 'PermissionDeniedError') {
+        setPermissionState('denied');
+        setCameraErrorMessage('Camera permission was denied. Please enable camera access in your browser or site settings.');
+      } else if (errName === 'NotFoundError' || errName === 'DevicesNotFoundError') {
+        setPermissionState('no-device');
+        setCameraErrorMessage('No camera device detected on this system. Please check connections or use manual code lookup.');
+      } else if (errName === 'NotReadableError' || errName === 'TrackStartError') {
+        setPermissionState('in-use');
+        setCameraErrorMessage('Camera is already in use by another browser tab, application, or software. Please close other camera clients.');
+      } else if (errMsg.includes('supported') || errMsg.includes('HTTPS')) {
+        setPermissionState('error');
+        setCameraErrorMessage('Browser security restriction: Camera access requires a secure origin (HTTPS or localhost).');
+      } else {
+        setPermissionState('error');
+        setCameraErrorMessage(`Failed to initialize camera: ${errMsg || 'Unknown hardware lockout error'}`);
+      }
+    }
+  };
+
+  // Launch the html5-qrcode video viewport
+  const startScanner = async () => {
+    try {
       const qrCodeScanner = new Html5Qrcode('qr-reader');
       setHtml5QrCodeInstance(qrCodeScanner);
 
@@ -42,19 +96,21 @@ const QRScannerPage = () => {
       };
 
       await qrCodeScanner.start(
-        { facingMode: 'environment' }, // use rear camera
+        { facingMode: 'environment' }, // target rear mobile camera
         config,
         async (decodedText) => {
-          // On Success
+          // Success Callback: stop scanner and tear down instance
           try {
             await qrCodeScanner.stop();
           } catch (stopErr) {
             console.error('Failed to stop camera scanner on scan success:', stopErr);
           }
-          setCameraActive(false);
+          setHtml5QrCodeInstance(null);
+          setPermissionState('idle');
+          setIsModalOpen(false);
           setBookingInput(decodedText);
           addToast('QR ticket code scanned successfully!', 'success');
-          // Automatically retrieve reservation details
+          // Retrieve registration parameters
           triggerVerification(decodedText);
         },
         () => {
@@ -62,21 +118,32 @@ const QRScannerPage = () => {
         }
       );
     } catch (err) {
-      console.error('[SCANNER ERROR] Failed to start html5-qrcode:', err);
-      setSearchError('Camera initialization failed. Please grant camera permission and ensure no other tab is using it.');
-      setCameraActive(false);
+      console.error('[SCANNER INITIALIZE EXCEPTION]:', err);
+      setPermissionState('error');
+      setCameraErrorMessage(`Failed to start video rendering: ${err.message || 'Unknown scanner error'}`);
     }
   };
 
+  // Safely stop scanning streams and release locks
   const stopScanner = async () => {
-    if (html5QrCodeInstance && html5QrCodeInstance.isScanning) {
-      try {
-        await html5QrCodeInstance.stop();
-      } catch (err) {
-        console.error('Failed to stop camera:', err);
+    if (html5QrCodeInstance) {
+      if (html5QrCodeInstance.isScanning) {
+        try {
+          await html5QrCodeInstance.stop();
+        } catch (err) {
+          console.error('Failed to stop camera scanner:', err);
+        }
       }
+      setHtml5QrCodeInstance(null);
     }
-    setCameraActive(false);
+  };
+
+  // Close scanner modal and perform structural cleanups
+  const closeScanner = async () => {
+    await stopScanner();
+    setPermissionState('idle');
+    setCameraErrorMessage('');
+    setIsModalOpen(false);
   };
 
   const triggerVerification = async (bookingId) => {
@@ -171,50 +238,31 @@ const QRScannerPage = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {/* Left Side: QR Scanner Camera preview section & Manual forms */}
+        {/* Left Side: QR Scanner Access Card & Manual Forms */}
         <div className="lg:col-span-1 flex flex-col gap-6">
           <div className="glass-card p-6 rounded-2xl border border-slate-200/40 dark:border-zinc-800/40 shadow-sm bg-white dark:bg-zinc-950 flex flex-col gap-4">
             <h3 className="font-extrabold text-slate-800 dark:text-white text-sm uppercase tracking-wider font-sans">
               Live Camera Verification
             </h3>
             
-            {/* Viewfinder box container */}
             <div className="relative overflow-hidden aspect-square w-full rounded-2xl border border-slate-200/60 dark:border-zinc-800/60 bg-zinc-950 flex flex-col justify-center items-center shadow-inner text-center">
-              {cameraActive ? (
-                <>
-                  <div id="qr-reader" className="absolute inset-0 w-full h-full object-cover"></div>
-                  {/* Viewfinder scanner HUD overlay */}
-                  <div className="absolute inset-4 border border-dashed border-blue-500/50 rounded-xl pointer-events-none flex items-center justify-center">
-                    <div className="w-48 h-48 border border-dashed border-blue-500 animate-glow rounded-xl"></div>
-                  </div>
-                </>
-              ) : (
-                <div className="p-6 flex flex-col items-center gap-3 text-zinc-500">
-                  <FiCamera size={32} className="text-zinc-600 dark:text-zinc-500 animate-float" />
-                  <p className="text-[11px] leading-relaxed max-w-[200px] text-zinc-400">
-                    Camera is currently offline. Press Start scanning camera to initialize live feed.
-                  </p>
-                </div>
-              )}
+              <div className="p-6 flex flex-col items-center gap-3 text-zinc-500">
+                <FiCamera size={32} className="text-zinc-600 dark:text-zinc-500 animate-float" />
+                <p className="text-[11px] leading-relaxed max-w-[200px] text-zinc-400 font-bold">
+                  Camera scan window is closed. Click the button below to initialize live viewfinder feed.
+                </p>
+              </div>
             </div>
 
-            {cameraActive ? (
-              <button
-                onClick={stopScanner}
-                className="btn-secondary py-3 text-xs uppercase font-extrabold tracking-wider justify-center w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30"
-              >
-                <FiVideoOff /> Stop Scanning Camera
-              </button>
-            ) : (
-              <button
-                onClick={startScanner}
-                className="btn-primary py-3 text-xs uppercase font-extrabold tracking-wider justify-center w-full"
-              >
-                <FiCamera /> Start Scanning Camera
-              </button>
-            )}
+            <button
+              onClick={openScanner}
+              className="btn-primary py-3 text-xs uppercase font-extrabold tracking-wider justify-center w-full flex items-center gap-2"
+            >
+              <FiCamera size={16} /> Open Live QR Scanner
+            </button>
           </div>
 
+          {/* Manual lookup input fallback if camera unavailable */}
           <div className="glass-card p-6 rounded-2xl border border-slate-200/40 dark:border-zinc-800/40 shadow-sm bg-white dark:bg-zinc-950">
             <h3 className="font-extrabold text-slate-800 dark:text-white text-sm uppercase tracking-wider mb-4 font-sans">
               Manual Ticket Lookup
@@ -258,7 +306,7 @@ const QRScannerPage = () => {
           </div>
         </div>
 
-        {/* Right Side: Ticket Screen display */}
+        {/* Right Side: Ticket Screen Display */}
         <div className="lg:col-span-2">
           {searching || loading ? (
             /* Loading skeletons */
@@ -286,7 +334,7 @@ const QRScannerPage = () => {
               </div>
             </div>
           ) : (
-            /* Ticket Details display Card */
+            /* Ticket Details Display Card */
             <div className="glass-card rounded-3xl border border-slate-200/40 dark:border-zinc-800/40 shadow-sm overflow-hidden flex flex-col justify-between min-h-[350px] bg-white dark:bg-zinc-950">
               
               {/* Header */}
@@ -344,7 +392,7 @@ const QRScannerPage = () => {
                     </span>
                   </div>
 
-                  {/* Payment status */}
+                  {/* Payment Status */}
                   <div className="flex flex-col gap-0.5">
                     <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Payment Ledger</span>
                     <span className="font-extrabold text-green-500 mt-0.5 flex items-center gap-1">
@@ -352,7 +400,7 @@ const QRScannerPage = () => {
                     </span>
                   </div>
 
-                  {/* Entry time */}
+                  {/* Entry Time */}
                   <div className="flex flex-col gap-0.5 border-t border-slate-200/10 dark:border-zinc-800/30 pt-4 md:border-t-0 md:pt-0">
                     <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Check-In Time</span>
                     <span className="font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
@@ -360,7 +408,7 @@ const QRScannerPage = () => {
                     </span>
                   </div>
 
-                  {/* Exit time */}
+                  {/* Exit Time */}
                   <div className="flex flex-col gap-0.5 border-t border-slate-200/10 dark:border-zinc-800/30 pt-4 md:border-t-0 md:pt-0">
                     <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Check-Out Time</span>
                     <span className="font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
@@ -417,6 +465,131 @@ const QRScannerPage = () => {
           )}
         </div>
       </div>
+
+      {/* Modern Glassmorphic Live Scanner Modal Viewport overlay */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm transition-all duration-300">
+          <div className="relative w-full max-w-md overflow-hidden glass-card rounded-3xl border border-slate-200/40 dark:border-zinc-800/40 shadow-2xl bg-white dark:bg-zinc-950 p-6 md:p-8 flex flex-col gap-6 animate-scale-up">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800/50 pb-4">
+              <div>
+                <h3 className="font-extrabold text-slate-800 dark:text-white text-sm font-sans tracking-tight flex items-center gap-2">
+                  <FiCamera className="text-blue-500 animate-pulse" /> Live Scan Window
+                </h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+                  Point camera at booking ticket QR
+                </p>
+              </div>
+              <button
+                onClick={closeScanner}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
+                title="Close Scanner"
+              >
+                <FiX size={18} />
+              </button>
+            </div>
+
+            {/* Camera Viewport Area */}
+            <div className="relative overflow-hidden aspect-square w-full rounded-2xl border border-slate-200/60 dark:border-zinc-800/60 bg-zinc-950 flex flex-col justify-center items-center shadow-inner text-center">
+              
+              {permissionState === 'requesting' && (
+                <div className="p-6 flex flex-col items-center gap-3 text-zinc-400">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-t-transparent border-blue-500" />
+                  <p className="text-xs font-bold uppercase tracking-widest text-blue-500">
+                    Requesting camera access...
+                  </p>
+                  <p className="text-[10px] leading-relaxed max-w-[220px] text-zinc-500">
+                    Please approve the browser media camera permission prompt to proceed.
+                  </p>
+                </div>
+              )}
+
+              {permissionState === 'denied' && (
+                <div className="p-6 flex flex-col items-center gap-3 text-red-500">
+                  <FiCameraOff size={36} className="text-red-400 animate-bounce" />
+                  <p className="text-xs font-bold uppercase tracking-widest">
+                    Camera Access Blocked
+                  </p>
+                  <p className="text-[11px] leading-relaxed max-w-[250px] text-zinc-400">
+                    {cameraErrorMessage}
+                  </p>
+                  <button
+                    onClick={openScanner}
+                    className="mt-2 btn-primary bg-red-500 hover:bg-red-600 border-red-500 py-2.5 px-4 text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5 shadow-md"
+                  >
+                    <FiRefreshCw size={12} className="animate-spin" /> Retry Permission Check
+                  </button>
+                </div>
+              )}
+
+              {(permissionState === 'no-device' || permissionState === 'in-use') && (
+                <div className="p-6 flex flex-col items-center gap-3 text-amber-500">
+                  <FiAlertTriangle size={36} className="text-amber-400 animate-bounce" />
+                  <p className="text-xs font-bold uppercase tracking-widest">
+                    {permissionState === 'no-device' ? 'No Camera Device' : 'Camera Lock Out'}
+                  </p>
+                  <p className="text-[11px] leading-relaxed max-w-[250px] text-zinc-400 font-semibold">
+                    {cameraErrorMessage}
+                  </p>
+                  <button
+                    onClick={openScanner}
+                    className="mt-2 btn-primary bg-amber-500 hover:bg-amber-600 border-amber-500 py-2.5 px-4 text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5 shadow-md"
+                  >
+                    <FiRefreshCw size={12} /> Retry Access Check
+                  </button>
+                </div>
+              )}
+
+              {permissionState === 'error' && (
+                <div className="p-6 flex flex-col items-center gap-3 text-red-500">
+                  <FiAlertTriangle size={36} className="text-red-400 animate-pulse" />
+                  <p className="text-xs font-bold uppercase tracking-widest">
+                    Browser Access Restriction
+                  </p>
+                  <p className="text-[11px] leading-relaxed max-w-[250px] text-zinc-400 font-semibold">
+                    {cameraErrorMessage}
+                  </p>
+                  <button
+                    onClick={openScanner}
+                    className="mt-2 btn-primary py-2.5 px-4 text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5 shadow-md"
+                  >
+                    <FiRefreshCw size={12} /> Retry Access Check
+                  </button>
+                </div>
+              )}
+
+              {permissionState === 'granted' && (
+                <>
+                  <div id="qr-reader" className="absolute inset-0 w-full h-full object-cover"></div>
+                  {/* Viewfinder scanner HUD overlay */}
+                  <div className="absolute inset-4 border border-dashed border-blue-500/50 rounded-xl pointer-events-none flex items-center justify-center">
+                    <div className="w-48 h-48 border border-dashed border-blue-500 animate-glow rounded-xl"></div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Modal Footer / Status Indicator */}
+            <div className="flex flex-col items-center gap-2 text-center border-t border-slate-100 dark:border-zinc-800/50 pt-4">
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${
+                  permissionState === 'granted' ? 'bg-green-500 animate-ping' :
+                  permissionState === 'requesting' ? 'bg-blue-500 animate-pulse' :
+                  permissionState === 'idle' ? 'bg-slate-400' : 'bg-red-500'
+                }`} />
+                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">
+                  Status: {permissionState}
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-bold">
+                Camera access operates fully locally inside your secure sandboxed browser. No media stream is ever sent to server side endpoints.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 };
