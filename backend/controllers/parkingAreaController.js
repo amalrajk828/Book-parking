@@ -221,3 +221,28 @@ export const assignGuide = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Get all unique city names in Title Case, sorted alphabetically (Public)
+// @route   GET /api/areas/cities
+// @access  Public
+export const getUniqueCities = async (req, res, next) => {
+  try {
+    const cities = await ParkingArea.distinct('city');
+    
+    // Normalize and filter duplicates case-insensitively
+    const normalizedCities = [...new Set(cities.map(c => {
+      if (!c) return '';
+      return c.trim().toLowerCase().replace(/\b\w/g, ch => ch.toUpperCase());
+    }))]
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+
+    res.status(200).json({
+      success: true,
+      count: normalizedCities.length,
+      cities: normalizedCities
+    });
+  } catch (error) {
+    next(error);
+  }
+};
